@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Web;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
@@ -14,11 +10,18 @@ using AerolineaVIP.Models;
 
 namespace AerolineaVIP
 {
+    /// <summary>
+    /// Servicio de correo SIMULADO (alcance académico): no envía correos reales.
+    /// El enlace de recuperación de contraseña se escribe en la ventana de
+    /// Salida (Output) de Visual Studio para poder probar el flujo.
+    /// </summary>
     public class EmailService : IIdentityMessageService
     {
         public Task SendAsync(IdentityMessage message)
         {
-            // Conecte el servicio de correo electrónico aquí para enviar un correo electrónico.
+            System.Diagnostics.Debug.WriteLine("[Correo simulado] Para: " + message.Destination);
+            System.Diagnostics.Debug.WriteLine("[Correo simulado] Asunto: " + message.Subject);
+            System.Diagnostics.Debug.WriteLine("[Correo simulado] " + message.Body);
             return Task.FromResult(0);
         }
     }
@@ -27,12 +30,11 @@ namespace AerolineaVIP
     {
         public Task SendAsync(IdentityMessage message)
         {
-            // Conecte el servicio SMS aquí para enviar un mensaje de texto.
             return Task.FromResult(0);
         }
     }
 
-    // Configure el administrador de usuarios de aplicación que se usa en esta aplicación. UserManager se define en ASP.NET Identity y se usa en la aplicación.
+    /// <summary>Administrador de usuarios de la aplicación (ASP.NET Identity 2).</summary>
     public class ApplicationUserManager : UserManager<ApplicationUser>
     {
         public ApplicationUserManager(IUserStore<ApplicationUser> store)
@@ -40,55 +42,71 @@ namespace AerolineaVIP
         {
         }
 
-        public static ApplicationUserManager Create(IdentityFactoryOptions<ApplicationUserManager> options, IOwinContext context) 
+        public static ApplicationUserManager Create(IdentityFactoryOptions<ApplicationUserManager> options, IOwinContext context)
         {
-            var manager = new ApplicationUserManager(new UserStore<ApplicationUser>(context.Get<ApplicationDbContext>()));
-            // Configure la lógica de validación de nombres de usuario
+            var manager = Configurar(new ApplicationUserManager(new UserStore<ApplicationUser>(context.Get<ApplicationDbContext>())));
+            var dataProtectionProvider = options.DataProtectionProvider;
+            if (dataProtectionProvider != null)
+            {
+                manager.UserTokenProvider =
+                    new DataProtectorTokenProvider<ApplicationUser>(dataProtectionProvider.Create("ASP.NET Identity"))
+                    {
+                        TokenLifespan = TimeSpan.FromHours(2)
+                    };
+            }
+            return manager;
+        }
+
+        /// <summary>Crea un administrador sin contexto OWIN (inicialización en Global.asax).</summary>
+        public static ApplicationUserManager CrearSinOwin(ApplicationDbContext db)
+        {
+            return Configurar(new ApplicationUserManager(new UserStore<ApplicationUser>(db)));
+        }
+
+        private static ApplicationUserManager Configurar(ApplicationUserManager manager)
+        {
+            // Nombre de usuario: letras, números, punto o guion bajo; correo único.
             manager.UserValidator = new UserValidator<ApplicationUser>(manager)
             {
                 AllowOnlyAlphanumericUserNames = false,
                 RequireUniqueEmail = true
             };
 
-            // Configure la lógica de validación de contraseñas
+            // Política de contraseñas del grupo: mínimo 8, mayúscula, minúscula, número y símbolo.
             manager.PasswordValidator = new PasswordValidator
             {
-                RequiredLength = 6,
+                RequiredLength = 8,
                 RequireNonLetterOrDigit = true,
                 RequireDigit = true,
                 RequireLowercase = true,
                 RequireUppercase = true,
             };
 
-            // Configurar valores predeterminados para bloqueo de usuario
+            // Bloqueo temporal tras 5 intentos fallidos (pantalla 2).
             manager.UserLockoutEnabledByDefault = true;
             manager.DefaultAccountLockoutTimeSpan = TimeSpan.FromMinutes(5);
             manager.MaxFailedAccessAttemptsBeforeLockout = 5;
 
-            // Registre los proveedores de autenticación de dos factores. Esta aplicación usa el teléfono y el correo electrónico para recibir un código de verificación del usuario
-            // Puede escribir su propio proveedor y conectarlo aquí.
-            manager.RegisterTwoFactorProvider("Código telefónico", new PhoneNumberTokenProvider<ApplicationUser>
-            {
-                MessageFormat = "Su código de seguridad es {0}"
-            });
-            manager.RegisterTwoFactorProvider("Código de correo electrónico", new EmailTokenProvider<ApplicationUser>
-            {
-                Subject = "Código de seguridad",
-                BodyFormat = "Su código de seguridad es {0}"
-            });
             manager.EmailService = new EmailService();
             manager.SmsService = new SmsService();
-            var dataProtectionProvider = options.DataProtectionProvider;
-            if (dataProtectionProvider != null)
-            {
-                manager.UserTokenProvider = 
-                    new DataProtectorTokenProvider<ApplicationUser>(dataProtectionProvider.Create("ASP.NET Identity"));
-            }
             return manager;
         }
     }
 
-    // Configure el administrador de inicios de sesión que se usa en esta aplicación.
+    /// <summary>Administrador de roles de la aplicación.</summary>
+    public class ApplicationRoleManager : RoleManager<IdentityRole>
+    {
+        public ApplicationRoleManager(IRoleStore<IdentityRole, string> store) : base(store)
+        {
+        }
+
+        public static ApplicationRoleManager Create(IdentityFactoryOptions<ApplicationRoleManager> options, IOwinContext context)
+        {
+            return new ApplicationRoleManager(new RoleStore<IdentityRole>(context.Get<ApplicationDbContext>()));
+        }
+    }
+
+    /// <summary>Administrador de inicio de sesión.</summary>
     public class ApplicationSignInManager : SignInManager<ApplicationUser, string>
     {
         public ApplicationSignInManager(ApplicationUserManager userManager, IAuthenticationManager authenticationManager)
