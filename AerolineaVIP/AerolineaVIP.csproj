@@ -176,6 +176,12 @@
     <Compile Include="Infraestructura\DebeSerVerdaderoAttribute.cs" />
     <Compile Include="Infraestructura\ErroresBD.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Models\Dominio\AerolineaVIPEntities.cs" />
+    <Compile Include="Models\Dominio\Catalogos.cs" />
+    <Compile Include="Models\Dominio\Metadatos\MetadatosDominio.cs" />
+    <Compile Include="Models\Dominio\Operacion.cs" />
+    <Compile Include="Models\Dominio\Transacciones.cs" />
+    <Compile Include="Models\Dominio\Vistas.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
