@@ -1,12 +1,10 @@
-﻿@model System.Web.Mvc.HandleErrorInfo
-
-@{
-    ViewBag.Title = "Bloqueado";
+﻿@{
+    ViewBag.Title = "Cuenta bloqueada temporalmente";
 }
-
-<main>
-    <hgroup>
-        <h1 class="text-danger">Bloqueado.</h1>
-        <h2 class="text-danger">Esta cuenta se ha bloqueado; inténtelo de nuevo más tarde.</h2>
-    </hgroup>
-</main>
+<div class="estado-vacio">
+    <h1 class="h3">Cuenta bloqueada temporalmente</h1>
+    <div class="alert alert-warning d-inline-block" role="alert">
+        <strong>Advertencia:</strong> se superó el número de intentos fallidos. Intente nuevamente en unos minutos.
+    </div>
+    <p><a class="btn btn-primary" href="@Url.Action("Login", "Account")">Volver a iniciar sesión</a></p>
+</div>

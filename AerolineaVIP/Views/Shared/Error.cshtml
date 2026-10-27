@@ -1,9 +1,20 @@
 ﻿@model System.Web.Mvc.HandleErrorInfo
-
 @{
     ViewBag.Title = "Error";
+    var sql = Model != null ? AerolineaVIP.Infraestructura.ErroresBD.ObtenerSql(Model.Exception) : null;
 }
-
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">Error al procesar la solicitud.</h2>
-
+<div class="estado-vacio">
+    <h1 class="h3">No se pudo completar la solicitud</h1>
+    <div class="alert alert-danger d-inline-block text-start" role="alert">
+        <strong>Error:</strong>
+        @if (sql != null)
+        {
+            @AerolineaVIP.Infraestructura.ErroresBD.Mensaje(Model.Exception)
+        }
+        else
+        {
+            <text>Ocurrió un error inesperado al procesar la solicitud. Intente nuevamente.</text>
+        }
+    </div>
+    <p><a class="btn btn-primary" href="@Url.Action("Index", "Home")">Volver al inicio</a></p>
+</div>

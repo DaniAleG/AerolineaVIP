@@ -1,0 +1,22 @@
+﻿@* Mensajes de interfaz (11.4.7): confirmación, error, información y advertencia.
+   Cada mensaje lleva texto de tipo además del color (regla A5). *@
+@{
+    var mensajes = new[]
+    {
+        new { Clave = "Confirmacion", Clase = "alert-success", Tipo = "Confirmación" },
+        new { Clave = "Error", Clase = "alert-danger", Tipo = "Error" },
+        new { Clave = "Advertencia", Clase = "alert-warning", Tipo = "Advertencia" },
+        new { Clave = "Informacion", Clase = "alert-info", Tipo = "Información" }
+    };
+}
+@foreach (var m in mensajes)
+{
+    var texto = TempData[m.Clave] as string ?? ViewData[m.Clave] as string;
+    if (!string.IsNullOrEmpty(texto))
+    {
+        <div class="alert @m.Clase alert-dismissible fade show" role="@(m.Clave == "Error" ? "alert" : "status")">
+            <strong>@m.Tipo:</strong> @texto
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
+}

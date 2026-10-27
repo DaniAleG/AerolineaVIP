@@ -1,0 +1,9 @@
+﻿@model int
+@{ var pasos = new[] { "Asientos", "Pasajeros", "Reserva", "Pago" }; }
+<ol class="pasos" aria-label="Pasos de la compra">
+    @for (int i = 0; i < pasos.Length; i++)
+    {
+        var n = i + 1;
+        <li class="@(n == Model ? "actual" : n < Model ? "hecho" : "")" aria-current="@(n == Model ? "step" : null)">@pasos[i]</li>
+    }
+</ol>

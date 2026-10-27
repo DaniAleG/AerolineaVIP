@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -12,474 +10,261 @@ using AerolineaVIP.Models;
 
 namespace AerolineaVIP.Controllers
 {
+    /// <summary>Pantallas 2 (inicio de sesión), 3 (registro) y 4 (recuperación de acceso).</summary>
     [Authorize]
     public class AccountController : Controller
     {
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
 
-        public AccountController()
-        {
-        }
-
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
-        {
-            UserManager = userManager;
-            SignInManager = signInManager;
-        }
-
         public ApplicationSignInManager SignInManager
         {
-            get
-            {
-                return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
-            }
-            private set 
-            { 
-                _signInManager = value; 
-            }
+            get { return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>(); }
+            private set { _signInManager = value; }
         }
 
         public ApplicationUserManager UserManager
         {
-            get
-            {
-                return _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
-            private set
-            {
-                _userManager = value;
-            }
+            get { return _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>(); }
+            private set { _userManager = value; }
         }
 
-        //
-        // GET: /Account/Login
-        [AllowAnonymous]
-        public ActionResult Login(string returnUrl)
+        private IAuthenticationManager AuthenticationManager
         {
+            get { return HttpContext.GetOwinContext().Authentication; }
+        }
+
+        // ===================== Pantalla 2: inicio de sesión =====================
+        [AllowAnonymous]
+        public ActionResult Login(string returnUrl, bool expirada = false)
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                // Usuario autenticado sin el rol requerido por la página de origen:
+                // se informa el acceso no autorizado (evita un bucle de redirecciones).
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    Response.StatusCode = 403;
+                    Response.TrySkipIisCustomErrors = true;
+                    ViewBag.Mensaje = "No tiene permisos para acceder a esta sección.";
+                    return View("~/Views/Shared/AccesoDenegado.cshtml");
+                }
+                return RedirigirSegunRol(null, null);
+            }
             ViewBag.ReturnUrl = returnUrl;
+            if (expirada || (!string.IsNullOrEmpty(returnUrl) && Request.Cookies[".AspNet.ApplicationCookie"] != null))
+                ViewBag.Advertencia = "Su sesión expiró. Inicie sesión nuevamente.";
+            else if (!string.IsNullOrEmpty(returnUrl))
+                ViewBag.Advertencia = "Inicie sesión para continuar.";
             return View();
         }
 
-        //
-        // POST: /Account/Login
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Login(LoginViewModel model, string returnUrl)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
+            ViewBag.ReturnUrl = returnUrl;
+            if (!ModelState.IsValid) return View(model);
 
-            // No cuenta los errores de inicio de sesión para el bloqueo de la cuenta
-            // Para permitir que los errores de contraseña desencadenen el bloqueo de la cuenta, cambie a shouldLockout: true
-            var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
+            // Se acepta nombre de usuario o correo; el mensaje de error es genérico.
+            var texto = model.UsuarioOCorreo.Trim();
+            var usuario = texto.Contains("@") ? await UserManager.FindByEmailAsync(texto) : await UserManager.FindByNameAsync(texto);
+            var nombreUsuario = usuario != null ? usuario.UserName : texto;
+
+            var result = await SignInManager.PasswordSignInAsync(nombreUsuario, model.Password, model.RememberMe, shouldLockout: true);
             switch (result)
             {
                 case SignInStatus.Success:
-                    return RedirectToLocal(returnUrl);
+                    return RedirigirSegunRol(usuario, returnUrl);
                 case SignInStatus.LockedOut:
                     return View("Lockout");
-                case SignInStatus.RequiresVerification:
-                    return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = model.RememberMe });
-                case SignInStatus.Failure:
                 default:
-                    ModelState.AddModelError("", "Intento de inicio de sesión no válido.");
+                    model.Password = null;
+                    ModelState.Remove("Password");
+                    ModelState.AddModelError("", "Usuario o contraseña incorrectos.");
                     return View(model);
             }
         }
 
-        //
-        // GET: /Account/VerifyCode
-        [AllowAnonymous]
-        public async Task<ActionResult> VerifyCode(string provider, string returnUrl, bool rememberMe)
+        /// <summary>Redirige a ReturnUrl (solo si es local) o al área del rol.</summary>
+        private ActionResult RedirigirSegunRol(ApplicationUser usuario, string returnUrl)
         {
-            // Requerir que el usuario haya iniciado sesión con nombre de usuario y contraseña o inicio de sesión externo
-            if (!await SignInManager.HasBeenVerifiedAsync())
-            {
-                return View("Error");
-            }
-            return View(new VerifyCodeViewModel { Provider = provider, ReturnUrl = returnUrl, RememberMe = rememberMe });
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) return Redirect(returnUrl);
+            var id = usuario != null ? usuario.Id : User.Identity.GetUserId();
+            if (UserManager.IsInRole(id, RolesApp.SuperUsuario) || UserManager.IsInRole(id, RolesApp.Administrador))
+                return RedirectToAction("Index", "Admin");
+            if (UserManager.IsInRole(id, RolesApp.Counter))
+                return RedirectToAction("MisReservas", "Reservas");
+            return RedirectToAction("MisReservas", "Reservas");
         }
 
-        //
-        // POST: /Account/VerifyCode
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> VerifyCode(VerifyCodeViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
+        // ===================== Pantalla 3: registro =====================
+        private bool EsSuperUsuario { get { return User.Identity.IsAuthenticated && User.IsInRole(RolesApp.SuperUsuario); } }
 
-            // El código siguiente protege de los ataques por fuerza bruta a los códigos de dos factores. 
-            // Si un usuario introduce códigos incorrectos durante un intervalo especificado de tiempo, la cuenta del usuario 
-            // se bloqueará durante un período de tiempo especificado. 
-            // Puede configurar el bloqueo de la cuenta en IdentityConfig
-            var result = await SignInManager.TwoFactorSignInAsync(model.Provider, model.Code, isPersistent:  model.RememberMe, rememberBrowser: model.RememberBrowser);
-            switch (result)
-            {
-                case SignInStatus.Success:
-                    return RedirectToLocal(model.ReturnUrl);
-                case SignInStatus.LockedOut:
-                    return View("Lockout");
-                case SignInStatus.Failure:
-                default:
-                    ModelState.AddModelError("", "Código no válido.");
-                    return View(model);
-            }
+        private void PrepararRoles(RegisterViewModel model)
+        {
+            model.PuedeElegirRol = EsSuperUsuario;
+            var roles = EsSuperUsuario ? RolesApp.Lista : new[] { RolesApp.Cliente };
+            model.Roles = roles.Select(r => new SelectListItem { Value = r, Text = RolesApp.Descripcion(r), Selected = r == model.Rol });
+            if (!EsSuperUsuario) model.Rol = RolesApp.Cliente;
         }
 
-        //
-        // GET: /Account/Register
         [AllowAnonymous]
         public ActionResult Register()
         {
-            return View();
+            // Un usuario autenticado que no es SuperUsuario no crea cuentas.
+            if (User.Identity.IsAuthenticated && !EsSuperUsuario) return RedirectToAction("Index", "Home");
+            var model = new RegisterViewModel { Rol = RolesApp.Cliente };
+            PrepararRoles(model);
+            return View(model);
         }
 
-        //
-        // POST: /Account/Register
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Register(RegisterViewModel model)
         {
+            if (User.Identity.IsAuthenticated && !EsSuperUsuario) return RedirectToAction("Index", "Home");
+
+            // SEGURIDAD: el rol enviado por el navegador se ignora si quien registra no es
+            // SuperUsuario. Un visitante SIEMPRE queda como Cliente.
+            var rol = EsSuperUsuario && RolesApp.Lista.Contains(model.Rol) ? model.Rol : RolesApp.Cliente;
+            model.Rol = rol;
+            ModelState.Remove("Rol");
+
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                if (await UserManager.FindByNameAsync(model.UserName) != null)
+                    ModelState.AddModelError("UserName", "El nombre de usuario ya está registrado.");
+                if (await UserManager.FindByEmailAsync(model.Email) != null)
+                    ModelState.AddModelError("Email", "El correo ya está registrado.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = model.UserName.Trim(),
+                    Email = model.Email.Trim(),
+                    Nombres = model.Nombres.Trim(),
+                    Apellidos = model.Apellidos.Trim()
+                };
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
-                    
-                    // Para obtener más información sobre cómo habilitar la confirmación de cuentas y el restablecimiento de contraseña, visite https://go.microsoft.com/fwlink/?LinkID=320771
-                    // Enviar un correo electrónico con este vínculo
-                    // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
-                    // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
-                    // await UserManager.SendEmailAsync(user.Id, "Confirmar la cuenta", "Para confirmar su cuenta, haga clic <a href=\"" + callbackUrl + "\">aquí</a>");
-
-                    return RedirectToAction("Index", "Home");
+                    await UserManager.AddToRoleAsync(user.Id, rol);
+                    if (EsSuperUsuario)
+                    {
+                        TempData["Confirmacion"] = "Cuenta «" + user.UserName + "» creada con el rol " + RolesApp.Descripcion(rol) + ".";
+                        return RedirectToAction("Gestion", "Admin", new { tab = "usuarios" });
+                    }
+                    TempData["Confirmacion"] = "Cuenta creada correctamente. Ya puede iniciar sesión.";
+                    return RedirectToAction("Login");
                 }
-                AddErrors(result);
+                foreach (var error in result.Errors) ModelState.AddModelError("", Traducir(error));
             }
 
-            // Si llegamos a este punto, es que se ha producido un error y volvemos a mostrar el formulario
+            model.Password = model.ConfirmPassword = null;
+            ModelState.Remove("Password");
+            ModelState.Remove("ConfirmPassword");
+            PrepararRoles(model);
             return View(model);
         }
 
-        //
-        // GET: /Account/ConfirmEmail
-        [AllowAnonymous]
-        public async Task<ActionResult> ConfirmEmail(string userId, string code)
+        private static string Traducir(string error)
         {
-            if (userId == null || code == null)
-            {
-                return View("Error");
-            }
-            var result = await UserManager.ConfirmEmailAsync(userId, code);
-            return View(result.Succeeded ? "ConfirmEmail" : "Error");
+            if (error.Contains("Passwords must")) return "La contraseña no cumple los requisitos: mínimo 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.";
+            if (error.Contains("is already taken")) return "El nombre de usuario o el correo ya está registrado.";
+            if (error.Contains("invalid, can only contain")) return "El nombre de usuario solo admite letras, números, punto o guion bajo.";
+            return error;
         }
 
-        //
-        // GET: /Account/ForgotPassword
+        // ===================== Pantalla 4: recuperación de acceso =====================
         [AllowAnonymous]
         public ActionResult ForgotPassword()
         {
+            if (User.Identity.IsAuthenticated) return RedirectToAction("Index", "Home");
             return View();
         }
 
-        //
-        // POST: /Account/ForgotPassword
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
-            if (ModelState.IsValid)
-            {
-                var user = await UserManager.FindByNameAsync(model.Email);
-                if (user == null || !(await UserManager.IsEmailConfirmedAsync(user.Id)))
-                {
-                    // No revelar que el usuario no existe o que no está confirmado
-                    return View("ForgotPasswordConfirmation");
-                }
+            if (!ModelState.IsValid) return View(model);
 
-                // Para obtener más información sobre cómo habilitar la confirmación de cuentas y el restablecimiento de contraseña, visite https://go.microsoft.com/fwlink/?LinkID=320771
-                // Enviar un correo electrónico con este vínculo
-                // string code = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
-                // var callbackUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);		
-                // await UserManager.SendEmailAsync(user.Id, "Restablecer contraseña", "Para restablecer la contraseña, haga clic <a href=\"" + callbackUrl + "\">aquí</a>");
-                // return RedirectToAction("ForgotPasswordConfirmation", "Account");
+            // Control de solicitudes repetidas: una por minuto por sesión.
+            var ultima = Session["UltimaRecuperacion"] as DateTime?;
+            if (ultima.HasValue && (DateTime.Now - ultima.Value).TotalSeconds < 60)
+            {
+                ViewBag.Advertencia = "Ya se envió una solicitud recientemente. Intente más tarde.";
+                return View(model);
+            }
+            Session["UltimaRecuperacion"] = DateTime.Now;
+
+            var texto = model.UsuarioOCorreo.Trim();
+            var user = texto.Contains("@") ? await UserManager.FindByEmailAsync(texto) : await UserManager.FindByNameAsync(texto);
+            if (user != null && UserManager.UserTokenProvider != null)
+            {
+                // El token se genera solo si la cuenta existe y nunca se muestra en la respuesta.
+                var code = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
+                var callbackUrl = Url.Action("ResetPassword", "Account", new { code = code }, protocol: Request.Url.Scheme);
+                await UserManager.SendEmailAsync(user.Id, "Recuperar acceso - Aerolínea VIP",
+                    "Para restablecer su contraseña abra este enlace: " + callbackUrl);
             }
 
-            // Si llegamos a este punto, es que se ha producido un error y volvemos a mostrar el formulario
-            return View(model);
+            // Mensaje neutral: no revela si la cuenta existe.
+            ViewBag.Informacion = "Si los datos corresponden a una cuenta registrada, recibirá las instrucciones para recuperar el acceso.";
+            ModelState.Clear();
+            return View(new ForgotPasswordViewModel());
         }
 
-        //
-        // GET: /Account/ForgotPasswordConfirmation
-        [AllowAnonymous]
-        public ActionResult ForgotPasswordConfirmation()
-        {
-            return View();
-        }
-
-        //
-        // GET: /Account/ResetPassword
         [AllowAnonymous]
         public ActionResult ResetPassword(string code)
         {
-            return code == null ? View("Error") : View();
+            return code == null ? View("Error") : View(new ResetPasswordViewModel { Code = code });
         }
 
-        //
-        // POST: /Account/ResetPassword
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ResetPassword(ResetPasswordViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-            var user = await UserManager.FindByNameAsync(model.Email);
-            if (user == null)
-            {
-                // No revelar que el usuario no existe
-                return RedirectToAction("ResetPasswordConfirmation", "Account");
-            }
+            if (!ModelState.IsValid) return View(model);
+            var user = await UserManager.FindByEmailAsync(model.Email);
+            if (user == null) return RedirectToAction("ResetPasswordConfirmation");
             var result = await UserManager.ResetPasswordAsync(user.Id, model.Code, model.Password);
-            if (result.Succeeded)
-            {
-                return RedirectToAction("ResetPasswordConfirmation", "Account");
-            }
-            AddErrors(result);
-            return View();
+            if (result.Succeeded) return RedirectToAction("ResetPasswordConfirmation");
+            foreach (var error in result.Errors) ModelState.AddModelError("", error.Contains("Invalid token") ? "El enlace no es válido o expiró." : Traducir(error));
+            return View(model);
         }
 
-        //
-        // GET: /Account/ResetPasswordConfirmation
         [AllowAnonymous]
         public ActionResult ResetPasswordConfirmation()
         {
             return View();
         }
 
-        //
-        // POST: /Account/ExternalLogin
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public ActionResult ExternalLogin(string provider, string returnUrl)
-        {
-            // Solicitar redireccionamiento al proveedor de inicio de sesión externo
-            return new ChallengeResult(provider, Url.Action("ExternalLoginCallback", "Account", new { ReturnUrl = returnUrl }));
-        }
-
-        //
-        // GET: /Account/SendCode
-        [AllowAnonymous]
-        public async Task<ActionResult> SendCode(string returnUrl, bool rememberMe)
-        {
-            var userId = await SignInManager.GetVerifiedUserIdAsync();
-            if (userId == null)
-            {
-                return View("Error");
-            }
-            var userFactors = await UserManager.GetValidTwoFactorProvidersAsync(userId);
-            var factorOptions = userFactors.Select(purpose => new SelectListItem { Text = purpose, Value = purpose }).ToList();
-            return View(new SendCodeViewModel { Providers = factorOptions, ReturnUrl = returnUrl, RememberMe = rememberMe });
-        }
-
-        //
-        // POST: /Account/SendCode
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> SendCode(SendCodeViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View();
-            }
-
-            // Generar el token y enviarlo
-            if (!await SignInManager.SendTwoFactorCodeAsync(model.SelectedProvider))
-            {
-                return View("Error");
-            }
-            return RedirectToAction("VerifyCode", new { Provider = model.SelectedProvider, ReturnUrl = model.ReturnUrl, RememberMe = model.RememberMe });
-        }
-
-        //
-        // GET: /Account/ExternalLoginCallback
-        [AllowAnonymous]
-        public async Task<ActionResult> ExternalLoginCallback(string returnUrl)
-        {
-            var loginInfo = await AuthenticationManager.GetExternalLoginInfoAsync();
-            if (loginInfo == null)
-            {
-                return RedirectToAction("Login");
-            }
-
-            // Si el usuario ya tiene un inicio de sesión, iniciar sesión del usuario con este proveedor de inicio de sesión externo
-            var result = await SignInManager.ExternalSignInAsync(loginInfo, isPersistent: false);
-            switch (result)
-            {
-                case SignInStatus.Success:
-                    return RedirectToLocal(returnUrl);
-                case SignInStatus.LockedOut:
-                    return View("Lockout");
-                case SignInStatus.RequiresVerification:
-                    return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = false });
-                case SignInStatus.Failure:
-                default:
-                    // Si el usuario no tiene ninguna cuenta, solicitar que cree una
-                    ViewBag.ReturnUrl = returnUrl;
-                    ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
-                    return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email });
-            }
-        }
-
-        //
-        // POST: /Account/ExternalLoginConfirmation
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> ExternalLoginConfirmation(ExternalLoginConfirmationViewModel model, string returnUrl)
-        {
-            if (User.Identity.IsAuthenticated)
-            {
-                return RedirectToAction("Index", "Manage");
-            }
-
-            if (ModelState.IsValid)
-            {
-                // Obtener datos del usuario del proveedor de inicio de sesión externo
-                var info = await AuthenticationManager.GetExternalLoginInfoAsync();
-                if (info == null)
-                {
-                    return View("ExternalLoginFailure");
-                }
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
-                var result = await UserManager.CreateAsync(user);
-                if (result.Succeeded)
-                {
-                    result = await UserManager.AddLoginAsync(user.Id, info.Login);
-                    if (result.Succeeded)
-                    {
-                        await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
-                        return RedirectToLocal(returnUrl);
-                    }
-                }
-                AddErrors(result);
-            }
-
-            ViewBag.ReturnUrl = returnUrl;
-            return View(model);
-        }
-
-        //
-        // POST: /Account/LogOff
+        // ===================== Cerrar sesión =====================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult LogOff()
         {
             AuthenticationManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie);
+            Session.Remove("ReservaEnCurso");
             return RedirectToAction("Index", "Home");
-        }
-
-        //
-        // GET: /Account/ExternalLoginFailure
-        [AllowAnonymous]
-        public ActionResult ExternalLoginFailure()
-        {
-            return View();
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                if (_userManager != null)
-                {
-                    _userManager.Dispose();
-                    _userManager = null;
-                }
-
-                if (_signInManager != null)
-                {
-                    _signInManager.Dispose();
-                    _signInManager = null;
-                }
+                if (_userManager != null) { _userManager.Dispose(); _userManager = null; }
+                if (_signInManager != null) { _signInManager.Dispose(); _signInManager = null; }
             }
-
             base.Dispose(disposing);
         }
-
-        #region Aplicaciones auxiliares
-        // Se usa para la protección XSRF al agregar inicios de sesión externos
-        private const string XsrfKey = "XsrfId";
-
-        private IAuthenticationManager AuthenticationManager
-        {
-            get
-            {
-                return HttpContext.GetOwinContext().Authentication;
-            }
-        }
-
-        private void AddErrors(IdentityResult result)
-        {
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError("", error);
-            }
-        }
-
-        private ActionResult RedirectToLocal(string returnUrl)
-        {
-            if (Url.IsLocalUrl(returnUrl))
-            {
-                return Redirect(returnUrl);
-            }
-            return RedirectToAction("Index", "Home");
-        }
-
-        internal class ChallengeResult : HttpUnauthorizedResult
-        {
-            public ChallengeResult(string provider, string redirectUri)
-                : this(provider, redirectUri, null)
-            {
-            }
-
-            public ChallengeResult(string provider, string redirectUri, string userId)
-            {
-                LoginProvider = provider;
-                RedirectUri = redirectUri;
-                UserId = userId;
-            }
-
-            public string LoginProvider { get; set; }
-            public string RedirectUri { get; set; }
-            public string UserId { get; set; }
-
-            public override void ExecuteResult(ControllerContext context)
-            {
-                var properties = new AuthenticationProperties { RedirectUri = RedirectUri };
-                if (UserId != null)
-                {
-                    properties.Dictionary[XsrfKey] = UserId;
-                }
-                context.HttpContext.GetOwinContext().Authentication.Challenge(properties, LoginProvider);
-            }
-        }
-        #endregion
     }
 }

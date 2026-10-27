@@ -1,0 +1,10 @@
+﻿@{
+    ViewBag.Title = "Acceso no autorizado";
+}
+<div class="estado-vacio">
+    <h1 class="h3">Acceso no autorizado</h1>
+    <div class="alert alert-danger d-inline-block" role="alert">
+        <strong>Error de acceso:</strong> @(ViewBag.Mensaje ?? "No tiene permisos para acceder a esta sección o la operación no existe.")
+    </div>
+    <p><a class="btn btn-primary" href="@Url.Action("Index", "Home")">Volver al inicio</a></p>
+</div>

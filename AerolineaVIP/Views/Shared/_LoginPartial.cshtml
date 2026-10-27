@@ -1,22 +1,24 @@
 ﻿@using Microsoft.AspNet.Identity
+@using System.Security.Claims
 @if (Request.IsAuthenticated)
 {
-    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
+    var identidad = User.Identity as ClaimsIdentity;
+    var nombre = identidad != null && identidad.FindFirst("NombreCompleto") != null ? identidad.FindFirst("NombreCompleto").Value : User.Identity.GetUserName();
+    var rol = AerolineaVIP.RolesApp.Lista.FirstOrDefault(r => User.IsInRole(r));
+    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "d-flex align-items-lg-center gap-2 flex-column flex-lg-row" }))
     {
-    @Html.AntiForgeryToken()
-
-    <ul class="navbar-nav navbar-right">
-        <li>
-            @Html.ActionLink("Hola " + User.Identity.GetUserName() + "!", "Index", "Manage", routeValues: null, htmlAttributes: new { title = "Manage", @class="nav-link" })
-        </li>
-        <li><a class="nav-link" href="javascript:document.getElementById('logoutForm').submit()">Cerrar sesión</a></li>
-    </ul>
+        @Html.AntiForgeryToken()
+        <a class="nav-link usuario-actual" href="@Url.Action("Index", "Manage")" title="Mi perfil">
+            <span class="d-block lh-sm">@nombre</span>
+            @if (rol != null) { <span class="rol-chip">@AerolineaVIP.RolesApp.Descripcion(rol)</span> }
+        </a>
+        <button type="submit" class="btn btn-sm btn-outline-light">Cerrar sesión</button>
     }
 }
 else
 {
-    <ul class="navbar-nav navbar-right">
-        <li>@Html.ActionLink("Registrarse", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink", @class="nav-link" })</li>
-        <li>@Html.ActionLink("Iniciar sesión", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink", @class="nav-link" })</li>
-    </ul>
+    <div class="d-flex gap-2 flex-column flex-lg-row">
+        <a class="btn btn-sm btn-outline-light" href="@Url.Action("Login", "Account")" id="loginLink">Iniciar sesión</a>
+        <a class="btn btn-sm btn-dorado" href="@Url.Action("Register", "Account")" id="registerLink">Registrarse</a>
+    </div>
 }

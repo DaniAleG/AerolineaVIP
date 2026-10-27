@@ -1,42 +1,110 @@
-﻿<!DOCTYPE html>
-<html>
+﻿@using Microsoft.AspNet.Identity
+@{
+    var esAdmin = User.IsInRole(AerolineaVIP.RolesApp.SuperUsuario) || User.IsInRole(AerolineaVIP.RolesApp.Administrador);
+    var esCounter = User.IsInRole(AerolineaVIP.RolesApp.Counter);
+    var esSuper = User.IsInRole(AerolineaVIP.RolesApp.SuperUsuario);
+    var controlador = (string)ViewContext.RouteData.Values["controller"];
+}
+<!DOCTYPE html>
+<html lang="es">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - Mi aplicación ASP.NET</title>
+    <meta name="description" content="Aerolínea VIP · compra y reserva de pasajes en jets privados (proyecto académico).">
+    <title>@ViewBag.Title · Aerolínea VIP</title>
+    <link rel="icon" href="~/Content/img/favicon.svg" type="image/svg+xml" />
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
-
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark">
-        <div class="container">
-            @Html.ActionLink("Nombre de la aplicación", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
-            <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" title="Alternar navegación" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
-                    <li>@Html.ActionLink("Inicio", "Index", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Acerca de", "About", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Contacto", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                </ul>
-                 @Html.Partial("_LoginPartial")
+    <a class="saltar-contenido" href="#contenido">Saltar al contenido principal</a>
+
+    <header class="encabezado">
+        <nav class="navbar navbar-expand-lg navbar-dark" aria-label="Navegación principal">
+            <div class="container">
+                <a class="navbar-brand marca" href="@Url.Action("Index", "Home")">
+                    <img src="~/Content/img/logo.svg" alt="" width="34" height="34" />
+                    <span>AEROLÍNEA <strong>VIP</strong></span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
+                        aria-controls="menuPrincipal" aria-expanded="false" aria-label="Mostrar u ocultar el menú">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="menuPrincipal">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link @(controlador == "Home" ? "active" : "")" href="@Url.Action("Index", "Home")">Inicio</a></li>
+                        <li class="nav-item"><a class="nav-link @(controlador == "Vuelos" ? "active" : "")" href="@Url.Action("Buscar", "Vuelos")">Vuelos</a></li>
+                        @if (Request.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle @(controlador == "Reservas" || controlador == "Compras" || controlador == "Comprobantes" || controlador == "CheckIn" ? "active" : "")"
+                                   href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">@(esCounter || esAdmin ? "Reservas" : "Mi cuenta")</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="@Url.Action("MisReservas", "Reservas")">@(esCounter || esAdmin ? "Consultar reservas" : "Mis reservas")</a></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("Index", "CheckIn")">Check-in</a></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("Index", "Comprobantes")">Comprobantes</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("Index", "Manage")">Mi perfil</a></li>
+                                </ul>
+                            </li>
+                            if (esCounter && !esAdmin)
+                            {
+                                <li class="nav-item"><a class="nav-link @(controlador == "Admin" ? "active" : "")" href="@Url.Action("Gestion", "Admin", new { tab = "reservas" })">Counter</a></li>
+                            }
+                            if (esAdmin)
+                            {
+                                <li class="nav-item"><a class="nav-link @(controlador == "Admin" ? "active" : "")" href="@Url.Action("Index", "Admin")">Administración</a></li>
+                            }
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "CheckIn")">Check-in</a></li>
+                            <li class="nav-item"><a class="nav-link" href="@Url.Action("Login", "Account")">Mi cuenta</a></li>
+                        }
+                    </ul>
+                    @Html.Partial("_LoginPartial")
+                </div>
             </div>
-        </div>
-    </nav>
-    <div class="container body-content">
+        </nav>
+    </header>
+
+    <main id="contenido" class="container cuerpo" tabindex="-1">
+        @if (AerolineaVIP.InicializadorIdentity.UltimoError != null)
+        {
+            <div class="alert alert-danger" role="alert"><strong>Configuración:</strong> @AerolineaVIP.InicializadorIdentity.UltimoError</div>
+        }
+        @Html.Partial("_Mensajes")
         @RenderBody()
-        <hr />
-        <footer>
-            <p>&copy; @DateTime.Now.Year - Mi aplicación ASP.NET</p>
-        </footer>
-    </div>
+    </main>
+
+    <footer class="pie">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <p class="pie-marca">AEROLÍNEA <strong>VIP</strong></p>
+                    <p class="small mb-0">Vuelos privados en Embraer Phenom 300E · máximo 7 pasajeros por vuelo.<br />Quito · Guayaquil · Manta · Galápagos.</p>
+                </div>
+                <div class="col-md-4">
+                    <p class="pie-titulo">Avisos</p>
+                    <ul class="small list-unstyled mb-0">
+                        <li>Proyecto académico: los pagos son <strong>simulados</strong>; no se realizan cobros reales.</li>
+                        <li>Los comprobantes son académicos y no tienen validez tributaria.</li>
+                        <li>Horarios sujetos a la programación establecida y a la disponibilidad real.</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <p class="pie-titulo">Contacto</p>
+                    <p class="small mb-0">Counters: Quito, Guayaquil, Manta y Galápagos.<br />contacto@@aerolineavip.test</p>
+                </div>
+            </div>
+            <hr />
+            <p class="small mb-0">&copy; @DateTime.Now.Year · ESPE · Desarrollo Web para Integración de Tecnología · Grupo 4</p>
+        </div>
+    </footer>
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/app")
     @RenderSection("scripts", required: false)
 </body>
 </html>

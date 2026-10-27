@@ -1,43 +1,87 @@
 ﻿@model AerolineaVIP.Models.RegisterViewModel
 @{
-    ViewBag.Title = "Registrarse";
+    ViewBag.Title = "Crear cuenta";
 }
+@* Pantalla 3. Registro: un visitante SIEMPRE queda como Cliente; solo el SuperUsuario elige otros roles (validado en el servidor). *@
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <h1 class="h3">Crear cuenta</h1>
+        <p class="text-muted small">Los campos marcados con <span class="req">*</span> son obligatorios.</p>
+        @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "tarjeta", novalidate = "novalidate" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+            <div class="row g-3">
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.Nombres, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.TextBoxFor(m => m.Nombres, new { @class = "form-control", placeholder = "Ej.: María José", autocomplete = "given-name" })
+                    @Html.ValidationMessageFor(m => m.Nombres)
+                </div>
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.Apellidos, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.TextBoxFor(m => m.Apellidos, new { @class = "form-control", placeholder = "Ej.: Pérez Torres", autocomplete = "family-name" })
+                    @Html.ValidationMessageFor(m => m.Apellidos)
+                </div>
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.UserName, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.TextBoxFor(m => m.UserName, new { @class = "form-control", placeholder = "4–50 caracteres", autocomplete = "username" })
+                    @Html.ValidationMessageFor(m => m.UserName)
+                </div>
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.Email, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", placeholder = "correo@ejemplo.com", autocomplete = "email" })
+                    @Html.ValidationMessageFor(m => m.Email)
+                </div>
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.Password, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", autocomplete = "new-password", aria_describedby = "requisitos" })
+                    <ul id="requisitos" class="texto-ayuda mb-0 ps-3">
+                        <li>Mínimo 8 caracteres</li>
+                        <li>Una mayúscula y una minúscula</li>
+                        <li>Un número y un símbolo</li>
+                    </ul>
+                    @Html.ValidationMessageFor(m => m.Password)
+                </div>
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.ConfirmPassword, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control", autocomplete = "new-password" })
+                    @Html.ValidationMessageFor(m => m.ConfirmPassword)
+                </div>
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.Rol, new { @class = "form-label" }) <span class="req">*</span>
+                    @if (Model.PuedeElegirRol)
+                    {
+                        @Html.DropDownListFor(m => m.Rol, Model.Roles, new { @class = "form-select" })
+                    }
+                    else
+                    {
+                        @Html.DropDownListFor(m => m.Rol, Model.Roles, new { @class = "form-select", disabled = "disabled", aria_describedby = "ayudaRol" })
+                        @Html.HiddenFor(m => m.Rol, new { id = "RolOculto" })
+                    }
+                    <div id="ayudaRol" class="texto-ayuda">Visitante: solo Cliente. Otros roles: solo SuperUsuario.</div>
+                    @Html.ValidationMessageFor(m => m.Rol)
+                </div>
+            </div>
 
-<main aria-labelledby="title">
-    <h2 id="title">@ViewBag.Title.</h2>
+            <div class="border rounded p-3 mt-4 small bg-light" style="max-height:160px; overflow:auto" tabindex="0" aria-label="Aviso de privacidad y condiciones">
+                <p class="fw-semibold mb-1">Aviso de privacidad y condiciones (proyecto académico)</p>
+                <p class="mb-1">Los datos se usan únicamente para gestionar la cuenta, las reservas y el check-in dentro de este sistema académico. No se comparten con terceros.</p>
+                <p class="mb-1">Los pagos son simulados y los comprobantes son académicos: no constituyen cobros reales ni documentos tributarios.</p>
+                <p class="mb-0">El usuario es responsable de la veracidad de los datos de los pasajeros que registra.</p>
+            </div>
+            <div class="form-check mt-3">
+                @Html.CheckBoxFor(m => m.AceptaCondiciones, new { @class = "form-check-input" })
+                <label class="form-check-label" for="AceptaCondiciones">Acepto el aviso de privacidad y las condiciones <span class="req">*</span></label>
+                @Html.ValidationMessageFor(m => m.AceptaCondiciones)
+            </div>
 
-    @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { role = "form" }))
-    {
-        @Html.AntiForgeryToken()
-        <h4>Cree una cuenta nueva.</h4>
-        <hr />
-        @Html.ValidationSummary("", new { @class = "text-danger" })
-        <div class="row">
-            @Html.LabelFor(m => m.Email, new { @class = "col-md-2 col-form-label" })
-            <div class="col-md-10">
-                @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary" data-texto-carga="Creando cuenta…">Crear cuenta</button>
+                <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Home")">Cancelar</a>
             </div>
-        </div>
-        <div class="row">
-            @Html.LabelFor(m => m.Password, new { @class = "col-md-2 col-form-label" })
-            <div class="col-md-10">
-                @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
-            </div>
-        </div>
-        <div class="row">
-            @Html.LabelFor(m => m.ConfirmPassword, new { @class = "col-md-2 col-form-label" })
-            <div class="col-md-10">
-                @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control" })
-            </div>
-        </div>
-        <div class="row">
-            <div class="offset-md-2 col-md-10">
-                <input type="submit" value="Registrarse" class="btn btn-outline-dark" />
-            </div>
-        </div>
-    }
-</main>
-
+        }
+    </div>
+</div>
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
 }

@@ -1,0 +1,109 @@
+﻿/* ==========================================================================
+   Mapa de asientos del Embraer Phenom 300E (pantallas 7, 8 y 19).
+   Representación esquemática de la cabina del documento de características:
+   proa a la izquierda, lado derecho (D) arriba, lado izquierdo (I) abajo,
+   puerta en la posición 1I, mesas entre las filas 2 y 3, baño atrás.
+   Semántica obligatoria: verde = disponible, morado = reservado, rojo = ocupado.
+   En móvil el avión se dibuja en vertical (proa arriba).
+   ========================================================================== */
+:root {
+    --asiento-verde: #1f8a4c;
+    --asiento-verde-claro: #e3f5ea;
+    --asiento-morado: #6f3fb5;
+    --asiento-morado-claro: #efe7fb;
+    --asiento-rojo: #c0392b;
+    --asiento-rojo-claro: #fbe5e2;
+}
+
+.avion {
+    position: relative;
+    background: #fff;
+    border: 2px solid #c9d2df;
+    border-radius: 140px 60px 60px 140px;
+    padding: 1.25rem 1.5rem 1.25rem 4.5rem;
+    max-width: 920px;
+    margin: 0 auto;
+}
+.avion::before { /* morro */
+    content: "";
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 42px; height: 60%; border-radius: 50% 0 0 50%;
+    background: linear-gradient(90deg, #dfe6f0, #f4f6fa);
+}
+
+.cabina {
+    display: grid;
+    grid-template-columns: 1.1fr repeat(2, 1fr) .7fr repeat(2, 1fr) 1fr;
+    grid-template-rows: auto 2.2rem auto;
+    gap: .55rem;
+    align-items: stretch;
+}
+
+/* Posiciones de escritorio: --c (columna) y --r (fila) se calculan en la vista */
+.cabina > * { grid-column: var(--c); grid-row: var(--r); }
+
+.zona {
+    display: grid; place-items: center; text-align: center;
+    font-size: .72rem; color: #5b6472; border: 1px dashed #c9d2df; border-radius: 10px;
+    background: #f6f8fb; padding: .35rem; min-height: 64px;
+}
+.zona.pasillo { border: 0; background: transparent; min-height: 0; letter-spacing: .35em; font-size: .68rem; }
+.zona.mesa { background: repeating-linear-gradient(45deg, #f1f3f7, #f1f3f7 6px, #e8ecf2 6px, #e8ecf2 12px); }
+.zona.puerta { border-style: solid; border-color: #9fb0c8; }
+
+.asiento {
+    position: relative;
+    min-height: 64px; min-width: 44px;
+    border-radius: 14px 14px 8px 8px;
+    border: 2px solid transparent;
+    font-weight: 700;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    line-height: 1.1;
+    transition: transform .12s ease, box-shadow .12s ease;
+    padding: .3rem;
+}
+.asiento .codigo { font-size: 1.05rem; }
+.asiento .estado-texto { font-size: .68rem; font-weight: 600; }
+.asiento:disabled { cursor: not-allowed; }
+
+.asiento-disponible { background: var(--asiento-verde-claro); border-color: var(--asiento-verde); color: #0f5530; }
+.asiento-reservado  { background: var(--asiento-morado-claro); border-color: var(--asiento-morado); color: #4a2580; }
+.asiento-ocupado    { background: var(--asiento-rojo-claro); border-color: var(--asiento-rojo); color: #8a2116; }
+.asiento-neutro     { background: #f1f4f8; border-color: #9fb0c8; color: #24324a; }
+
+button.asiento-disponible:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(31,138,76,.25); }
+
+/* Su selección actual: borde negro grueso + ✓ (solo en el navegador hasta reservar) */
+.asiento.asiento-seleccionado {
+    border: 4px solid #111 !important;
+    box-shadow: 0 0 0 3px #fff inset;
+}
+.asiento.asiento-seleccionado::after {
+    content: "✓";
+    position: absolute; top: -10px; right: -10px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #111; color: #fff; font-size: .8rem;
+    display: grid; place-items: center;
+}
+.asiento .pasajero-tag { font-size: .62rem; font-weight: 600; }
+
+.mapa-cargando { opacity: .45; pointer-events: none; }
+
+/* Leyenda (siempre visible, con texto además del color) */
+.leyenda { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; list-style: none; padding: 0; margin: 1rem 0 0; font-size: .85rem; }
+.leyenda li { display: flex; align-items: center; gap: .45rem; }
+.leyenda .muestra { width: 22px; height: 18px; border-radius: 6px 6px 4px 4px; border: 2px solid; }
+.leyenda .muestra.asiento-seleccionado { border: 3px solid #111; background: var(--asiento-verde-claro); }
+
+/* ---------- Móvil: avión vertical, proa arriba ---------- */
+@media (max-width: 767.98px) {
+    .avion { border-radius: 120px 120px 40px 40px; padding: 4.2rem .9rem 1rem; max-width: 360px; }
+    .avion::before { left: 50%; top: 12px; transform: translateX(-50%); width: 55%; height: 40px; border-radius: 50% 50% 0 0; background: linear-gradient(180deg, #dfe6f0, #f4f6fa); }
+    .cabina {
+        grid-template-columns: 1fr 2.2rem 1fr;
+        grid-template-rows: auto repeat(2, auto) .6fr repeat(2, auto) auto;
+    }
+    .cabina > * { grid-column: var(--mc); grid-row: var(--mr); }
+    .zona.pasillo { writing-mode: vertical-rl; }
+    .asiento { min-height: 56px; }
+}

@@ -1,0 +1,12 @@
+﻿@model VueloInfoVM
+@{ var t = ViewData["Tramo"] ?? 0; }
+<dl class="barra-vuelo tarjeta mb-3">
+    <div><dt>Vuelo</dt><dd>@Model.Vuelo.CodigoVuelo</dd></div>
+    <div><dt>Fecha</dt><dd>@Formato.FechaConDia(Model.Vuelo.FechaOperacion)</dd></div>
+    <div><dt>Ruta</dt><dd>@Model.Vuelo.CiudadOrigen (@Model.Vuelo.Origen) → @Model.Vuelo.CiudadDestino (@Model.Vuelo.Destino)</dd></div>
+    <div><dt>Salida – llegada</dt><dd>@Formato.Horario(Model.Vuelo.HoraSalida, Model.Vuelo.HoraLlegada)</dd></div>
+    <div><dt>Aeronave</dt><dd>@(Model.TieneAeronave ? Model.Matricula + " · " + Model.Modelo : "Sin asignar")</dd></div>
+    <div><dt>Capacidad máxima</dt><dd>@(Model.TieneAeronave ? Model.Capacidad : 7) asientos</dd></div>
+    <div><dt>Disponibles</dt><dd><span data-resumen-disponibles="@t">@Model.Disponibles</span> de @(Model.TieneAeronave ? Model.Capacidad : 7)</dd></div>
+    <div><dt>Estado</dt><dd><span class="@Formato.ClaseEstado(Model.Vuelo.EstadoVueloCodigo)">@Formato.TextoEstadoVuelo(Model.Vuelo.EstadoVueloCodigo)</span></dd></div>
+</dl>
