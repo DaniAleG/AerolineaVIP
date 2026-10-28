@@ -1,0 +1,117 @@
+﻿@model MisReservasVM
+@{
+    ViewBag.Title = Model.EsPersonal ? "Consulta de reservas" : "Mis reservas";
+}
+@* Pantalla 13. Consulta de reservas: el cliente ve solo las propias; el personal autorizado consulta todas. *@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <h1 class="h3 mb-0">@ViewBag.Title</h1>
+    <a class="btn btn-primary" href="@Url.Action("Buscar", "Vuelos")">Buscar vuelos</a>
+</div>
+@if (Model.EsPersonal)
+{
+    <p class="text-muted small">Vista del personal autorizado: muestra reservas de todos los clientes (asistencia de counter y administración).</p>
+}
+
+@using (Html.BeginForm("MisReservas", "Reservas", FormMethod.Get, new { id = "formFiltros", @class = "tarjeta mb-3", novalidate = "novalidate" }))
+{
+    <div class="row g-3 align-items-end">
+        <div class="col-6 col-md-3">
+            @Html.LabelFor(m => m.Desde, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.Desde, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control" })
+        </div>
+        <div class="col-6 col-md-3">
+            @Html.LabelFor(m => m.Hasta, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.Hasta, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.Hasta)
+        </div>
+        <div class="col-md-3">
+            @Html.LabelFor(m => m.Estado, new { @class = "form-label" })
+            @Html.DropDownListFor(m => m.Estado, Model.Estados, new { @class = "form-select" })
+        </div>
+        @if (Model.EsPersonal)
+        {
+            <div class="col-md-3">
+                @Html.LabelFor(m => m.Buscar, new { @class = "form-label" })
+                @Html.TextBoxFor(m => m.Buscar, new { @class = "form-control", placeholder = "RV00000001, usuario, cédula…" })
+            </div>
+        }
+        <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+            <button type="button" class="btn btn-link" data-limpiar="#formFiltros">Limpiar</button>
+        </div>
+    </div>
+}
+
+@if (!Model.Filas.Any())
+{
+    <div class="estado-vacio tarjeta">
+        <div class="alert alert-info d-inline-block" role="status">
+            <strong>Información:</strong> @(Model.Desde.HasValue || Model.Hasta.HasValue || !string.IsNullOrEmpty(Model.Estado) || !string.IsNullOrEmpty(Model.Buscar) ? "No tiene reservas que coincidan con los filtros." : "Aún no tiene reservas.")
+        </div>
+        <p><a class="btn btn-primary" href="@Url.Action("Buscar", "Vuelos")">Buscar vuelos</a></p>
+    </div>
+}
+else
+{
+    foreach (var f in Model.Filas.Where(x => x.EstadoReserva == "PENDIENTE" && x.FechaExpiracion.HasValue))
+    {
+        <div class="alert alert-warning py-2" role="status"><strong>Advertencia:</strong> La reserva @f.CodigoReserva expira el @Formato.FechaHora(f.FechaExpiracion) si no se paga.</div>
+    }
+    <div class="tarjeta p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 tabla-apilada">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Fecha de viaje</th>
+                        <th scope="col">Ruta</th>
+                        <th scope="col">Pasajeros</th>
+                        @if (Model.EsPersonal) { <th scope="col">Titular</th> }
+                        <th scope="col">Reserva</th>
+                        <th scope="col">Compra</th>
+                        <th scope="col" class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var f in Model.Filas)
+                    {
+                        <tr>
+                            <td data-label="Código" class="fw-semibold">@f.CodigoReserva</td>
+                            <td data-label="Fecha de viaje">@Formato.Fecha(f.FechaViaje)</td>
+                            <td data-label="Ruta">@f.Ruta</td>
+                            <td data-label="Pasajeros">@f.Pasajeros</td>
+                            @if (Model.EsPersonal) { <td data-label="Titular">@f.Usuario</td> }
+                            <td data-label="Reserva"><span class="@Formato.ClaseEstado(f.EstadoReserva)">@Formato.TextoEstadoReserva(f.EstadoReserva)</span></td>
+                            <td data-label="Compra"><span class="@Formato.ClaseEstado(f.EstadoCompra)">@Formato.TextoEstadoCompra(f.EstadoCompra)</span></td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Gestionar", new { id = f.ReservaId })">Ver detalle</a>
+                                @if (f.PuedePagar)
+                                {
+                                    <a class="btn btn-sm btn-primary" href="@Url.Action("Pagar", "Compras", new { id = f.ReservaId })">Pagar</a>
+                                }
+                                @if (f.EstadoReserva == "CONFIRMADA")
+                                {
+                                    <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Index", "Comprobantes", new { Buscar = f.CodigoReserva })">Comprobantes</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    if (Model.TotalPaginas > 1)
+    {
+        <nav aria-label="Paginación" class="mt-3">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(Model.Pagina <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("MisReservas", new { Desde = Model.Desde, Hasta = Model.Hasta, Estado = Model.Estado, Buscar = Model.Buscar, Pagina = Model.Pagina - 1 })">« Anterior</a>
+                </li>
+                <li class="page-item active" aria-current="page"><span class="page-link">@Model.Pagina de @Model.TotalPaginas</span></li>
+                <li class="page-item @(Model.Pagina >= Model.TotalPaginas ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("MisReservas", new { Desde = Model.Desde, Hasta = Model.Hasta, Estado = Model.Estado, Buscar = Model.Buscar, Pagina = Model.Pagina + 1 })">Siguiente »</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}

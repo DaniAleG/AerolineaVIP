@@ -167,9 +167,11 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\ComprasController.cs" />
     <Compile Include="Controllers\ControladorBase.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
+    <Compile Include="Controllers\ReservasController.cs" />
     <Compile Include="Controllers\VuelosController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -280,6 +282,16 @@
     <Content Include="Views\Vuelos\Disponibilidad.cshtml" />
     <Content Include="Views\Vuelos\Resultados.cshtml" />
     <Content Include="Views\Vuelos\_TarjetaVuelo.cshtml" />
+    <Content Include="Views\Reservas\Confirmar.cshtml" />
+    <Content Include="Views\Reservas\Gestionar.cshtml" />
+    <Content Include="Views\Reservas\MisReservas.cshtml" />
+    <Content Include="Views\Reservas\Pasajeros.cshtml" />
+    <Content Include="Views\Reservas\SeleccionAsiento.cshtml" />
+    <Content Include="Views\Reservas\_DetalleReserva.cshtml" />
+    <Content Include="Views\Reservas\_EstadosOperacion.cshtml" />
+    <Content Include="Views\Reservas\_ResumenOperacion.cshtml" />
+    <Content Include="Views\Compras\Confirmacion.cshtml" />
+    <Content Include="Views\Compras\Pagar.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

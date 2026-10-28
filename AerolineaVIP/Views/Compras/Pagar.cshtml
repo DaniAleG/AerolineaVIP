@@ -1,0 +1,150 @@
+﻿@model PagoVM
+@{
+    ViewBag.Title = "Proceso de compra y pago";
+    var d = Model.Detalle;
+    var r = d.Reserva;
+    var primera = d.Lineas.OrderBy(l => l.SalidaProgramada).FirstOrDefault();
+    var ultima = d.Lineas.OrderBy(l => l.SalidaProgramada).LastOrDefault();
+    var tramos = d.Lineas.Select(l => l.CodigoVuelo).Distinct().Count();
+}
+@* Pantalla 11. Proceso de compra y pago SIMULADO. *@
+@Html.Partial("_Pasos", 4)
+<h1 class="h3">Proceso de compra y pago</h1>
+<div class="aviso-simulacion mb-3" role="note"><strong>Aviso:</strong> Simulación académica: no se realizan cobros reales. No se guarda el número completo, el vencimiento ni el código de seguridad de la tarjeta.</div>
+
+@if (Model.Mensaje != null)
+{
+    <div class="alert alert-@Model.TipoMensaje" role="status"><strong>Información:</strong> @Model.Mensaje</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        @using (Html.BeginForm("Pagar", "Compras", FormMethod.Post, new { id = "formPago", @class = "tarjeta", novalidate = "novalidate", autocomplete = "off" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.ReservaId)
+            @Html.HiddenFor(m => m.Token)
+            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+
+            <fieldset class="mb-3">
+                <legend class="form-label fs-6">Método de pago <span class="req">*</span></legend>
+                @foreach (var m in Model.Metodos)
+                {
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="MetodoPagoCodigo" id="metodo_@m.Codigo" value="@m.Codigo"
+                               data-nombre="@(m.Codigo == "TARJETA_CREDITO" ? "Tarjeta de crédito" : m.Codigo == "TARJETA_DEBITO" ? "Tarjeta de débito" : m.Nombre)"
+                               checked="@(Model.MetodoPagoCodigo == m.Codigo ? "checked" : null)"
+                               data-val="true" data-val-required="Seleccione el método de pago." />
+                        <label class="form-check-label" for="metodo_@m.Codigo">@m.Nombre</label>
+                    </div>
+                }
+                @Html.ValidationMessageFor(m => m.MetodoPagoCodigo)
+            </fieldset>
+
+            <fieldset class="mb-3">
+                <legend class="form-label fs-6">Marca de la tarjeta <span class="req">*</span></legend>
+                <div class="marcas">
+                    @foreach (var m in Model.Marcas)
+                    {
+                        <div class="marca-opcion">
+                            <input type="radio" name="MarcaTarjetaCodigo" id="marca_@m.Codigo" value="@m.Codigo"
+                                   data-nombre="@m.Nombre" data-largo="@m.LongitudNumero" data-cvv="@m.LongitudCodigoSeguridad"
+                                   checked="@(Model.MarcaTarjetaCodigo == m.Codigo ? "checked" : null)"
+                                   data-val="true" data-val-required="Seleccione la marca de la tarjeta." />
+                            <label for="marca_@m.Codigo">
+                                <img src="@Url.Content(m.RutaLogo)" alt="" />
+                                <span>@m.Nombre</span>
+                            </label>
+                        </div>
+                    }
+                </div>
+                @Html.ValidationMessageFor(m => m.MarcaTarjetaCodigo)
+            </fieldset>
+
+            <div class="row g-3">
+                <div class="col-12">
+                    @Html.LabelFor(m => m.NumeroTarjeta, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.TextBoxFor(m => m.NumeroTarjeta, new { @class = "form-control", inputmode = "numeric", placeholder = "0000 0000 0000 0000", aria_describedby = "ayudaNumero", maxlength = 23 })
+                    <div id="ayudaNumero" class="texto-ayuda">Solo números · 16 dígitos para Visa</div>
+                    @Html.ValidationMessageFor(m => m.NumeroTarjeta)
+                </div>
+                <div class="col-12">
+                    @Html.LabelFor(m => m.NombreTitular, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.TextBoxFor(m => m.NombreTitular, new { @class = "form-control", placeholder = "Como aparece en la tarjeta", maxlength = 100 })
+                    @Html.ValidationMessageFor(m => m.NombreTitular)
+                </div>
+                <div class="col-6">
+                    @Html.LabelFor(m => m.Vencimiento, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.TextBoxFor(m => m.Vencimiento, new { @class = "form-control", inputmode = "numeric", placeholder = "MM/AA", maxlength = 5 })
+                    @Html.ValidationMessageFor(m => m.Vencimiento)
+                </div>
+                <div class="col-6">
+                    @Html.LabelFor(m => m.CodigoSeguridad, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.PasswordFor(m => m.CodigoSeguridad, new { @class = "form-control", inputmode = "numeric", placeholder = "•••", maxlength = 4, aria_describedby = "ayudaCodigo" })
+                    <div id="ayudaCodigo" class="texto-ayuda">3 dígitos (4 en American Express)</div>
+                    @Html.ValidationMessageFor(m => m.CodigoSeguridad)
+                </div>
+            </div>
+            <p class="texto-ayuda mt-3 mb-0">Regla de la simulación (documentada): un número de tarjeta que termina en <strong>@Politicas.SufijoTarjetaRechazada</strong> se rechaza; cualquier otro número con formato válido se aprueba.</p>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="button" id="btnAbrirModal" class="btn btn-primary px-4">Pagar</button>
+                <a class="btn btn-outline-secondary" href="@Url.Action("Gestionar", "Reservas", new { id = r.ReservaId })">Volver</a>
+            </div>
+
+            <!-- Modal de confirmación: el POST real se envía solo desde su botón «Pagar». -->
+            <div class="modal fade" id="modalConfirmarPago" tabindex="-1" aria-labelledby="tituloModalPago" aria-hidden="true" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" id="tituloModalPago">¿Está seguro de que desea realizar este pago?</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body resumen">
+                            <dl>
+                                <dt>Monto total</dt><dd>@Formato.Dinero(d.Lineas.Where(l => l.EstadoAsignacion == "PENDIENTE").Sum(l => l.Importe), "").Trim()</dd>
+                                <dt>Moneda</dt><dd>@Politicas.Moneda</dd>
+                                <dt>Origen → destino</dt><dd>@(primera != null ? primera.Ruta.Split('→')[0].Trim() + " → " + ultima.Ruta.Split('→')[1].Trim() : "—")</dd>
+                                <dt>Fecha del viaje</dt><dd>@(primera != null ? Formato.FechaConDia(primera.Fecha) : "—")</dd>
+                                <dt>Horario</dt><dd>@(primera != null ? Formato.Horario(primera.Salida, ultima.Llegada) + (tramos > 1 ? " (" + tramos + " tramos)" : "") : "—")</dd>
+                                <dt>Pasajeros</dt><dd>@string.Join(", ", d.Lineas.Select(l => l.Pasajero).Distinct())</dd>
+                                <dt>Asientos</dt><dd>@d.Lineas.Count asignación(es) · @d.AsientosTexto</dd>
+                                <dt>Método</dt><dd id="modalMetodo">—</dd>
+                                <dt>Estado</dt><dd>Pago simulado sin procesar</dd>
+                            </dl>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="btnCancelarModal" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" id="btnConfirmarPago" class="btn btn-primary">Pagar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    <aside class="col-lg-5">
+        <div class="tarjeta resumen pegajoso">
+            <h2 class="tarjeta-titulo">Resumen de compra</h2>
+            <dl>
+                <dt>Reserva</dt><dd>@r.CodigoReserva</dd>
+                <dt>Titular</dt><dd>@d.Titular</dd>
+                <dt>Ruta</dt><dd>@(primera != null ? primera.Ruta.Split('→')[0].Trim() + " → " + ultima.Ruta.Split('→')[1].Trim() : "—")</dd>
+                <dt>Fecha</dt><dd>@(primera != null ? Formato.Fecha(primera.Fecha) : "—")</dd>
+                <dt>Pasajeros</dt><dd>@d.Lineas.Select(l => l.Pasajero).Distinct().Count()</dd>
+                <dt>Asientos</dt><dd>@d.AsientosTexto</dd>
+                <dt>Total</dt><dd class="total">@Formato.Dinero(d.Lineas.Where(l => l.EstadoAsignacion == "PENDIENTE").Sum(l => l.Importe))</dd>
+                <dt>Estado de la compra</dt><dd><span class="estado estado-pendiente">@(d.Compra == null ? "Pendiente de pago" : Formato.TextoEstadoCompra(d.EstadoCompra))</span></dd>
+                @if (r.FechaExpiracion.HasValue)
+                {
+                    <dt>Reserva vigente hasta</dt><dd>@Formato.FechaHora(r.FechaExpiracion)</dd>
+                }
+            </dl>
+            <p class="texto-ayuda mt-2 mb-0">El importe se calcula en el servidor con las tarifas de ejemplo (DP-04).</p>
+        </div>
+    </aside>
+</div>
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/bundles/pago")
+}

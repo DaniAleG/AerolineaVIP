@@ -1,0 +1,103 @@
+﻿@model ConfirmarReservaVM
+@{
+    ViewBag.Title = "Reserva de pasajes";
+    var r = Model.Resumen;
+}
+@* Pantalla 10. Reserva de pasajes: revalida disponibilidad y registra la reserva PENDIENTE (asientos morados). *@
+@Html.Partial("_Pasos", 3)
+<h1 class="h3">Reserva de pasajes</h1>
+@Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+
+<div class="tarjeta mb-3">
+    <h2 class="tarjeta-titulo">Itinerario</h2>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0 tabla-apilada">
+            <thead><tr><th scope="col">Tramo</th><th scope="col">Vuelo</th><th scope="col">Ruta</th><th scope="col">Fecha</th><th scope="col">Horario</th></tr></thead>
+            <tbody>
+                @foreach (var t in r.Tramos)
+                {
+                    <tr>
+                        <td data-label="Tramo">@t.Orden</td>
+                        <td data-label="Vuelo">@t.CodigoVuelo</td>
+                        <td data-label="Ruta">@t.CiudadOrigen → @t.CiudadDestino</td>
+                        <td data-label="Fecha">@Formato.Fecha(t.Fecha)</td>
+                        <td data-label="Horario">@Formato.Horario(t.Salida, t.Llegada)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="tarjeta mb-3">
+    <h2 class="tarjeta-titulo">Pasajeros y asientos</h2>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0 tabla-apilada">
+            <thead>
+                <tr>
+                    <th scope="col">Pasajero</th><th scope="col">Documento</th>
+                    @foreach (var t in r.Tramos) { <th scope="col">Asiento tramo @t.Orden</th> }
+                    <th scope="col" class="text-end">Importe (ejemplo)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in r.Pasajeros)
+                {
+                    <tr>
+                        <td data-label="Pasajero">@p.Nombre</td>
+                        <td data-label="Documento">@p.Documento</td>
+                        @for (int i = 0; i < p.Asientos.Count; i++) { <td data-label="Asiento tramo @(i + 1)"><strong>@p.Asientos[i]</strong></td> }
+                        <td data-label="Importe" class="text-end">@Formato.Dinero(p.Importe, r.Moneda)</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr><th colspan="@(2 + r.Tramos.Count)" class="text-end">Total estimado</th><td class="text-end total">@Formato.Dinero(r.Total, r.Moneda) <span class="texto-ayuda d-block">tarifa de ejemplo</span></td></tr>
+                <tr><th colspan="@(2 + r.Tramos.Count)" class="text-end">Estado tras confirmar</th><td class="text-end"><span class="estado estado-pendiente">Reserva pendiente de pago</span></td></tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+@using (Html.BeginForm("Confirmar", "Reservas", FormMethod.Post, new { id = "formConfirmar", novalidate = "novalidate" }))
+{
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="token" value="@ViewBag.Token" />
+    <div class="tarjeta mb-3">
+        <h2 class="tarjeta-titulo">Condiciones de la reserva</h2>
+        <div class="border rounded p-3 mb-3 small" style="max-height: 180px; overflow:auto" tabindex="0" aria-label="Condiciones de la reserva">
+            <p class="mb-2"><strong>Política propuesta por el grupo (pendiente de aprobación).</strong></p>
+            <ul class="mb-0">
+                <li>La reserva se registra en estado <strong>Pendiente de pago</strong> y los asientos quedan reservados (morado). Una reserva no equivale a una compra pagada.</li>
+                <li>DP-07: la reserva pendiente se conserva <strong>@Model.HorasRetencion horas</strong> o hasta @Politicas.HorasCierreVentaAntesSalida horas antes de la primera salida, lo que ocurra primero. Para esta operación vencería el <strong>@Formato.FechaHora(Model.ExpiracionEstimada)</strong>; si no se paga, expira y los asientos se liberan.</li>
+                <li>La compra se confirma solo con un pago simulado aprobado; entonces los asientos pasan a ocupados (rojo).</li>
+                <li>DP-08: una reserva pendiente puede cancelarse sin costo; una pagada, hasta @Politicas.HorasMinimasCancelacionPagada horas antes de la salida.</li>
+                <li>Las tarifas son valores de ejemplo (DP-04). Pagos y comprobantes son simulaciones académicas.</li>
+            </ul>
+        </div>
+        @if (Model.EsPersonal)
+        {
+            <div class="mb-3">
+                @Html.LabelFor(m => m.ClienteTitular, new { @class = "form-label" }) @if (User.IsInRole(RolesApp.Counter)) { <span class="req">*</span> }
+                @Html.TextBoxFor(m => m.ClienteTitular, new { @class = "form-control", placeholder = "usuario o correo del cliente", aria_describedby = "ayudaTitular" })
+                <div id="ayudaTitular" class="texto-ayuda">Asistencia de counter: la reserva queda a nombre de este cliente registrado. @(User.IsInRole(RolesApp.SuperUsuario) ? "Si lo deja vacío, se registra a su nombre." : "")</div>
+                @Html.ValidationMessageFor(m => m.ClienteTitular)
+            </div>
+        }
+        <div class="form-check">
+            @Html.CheckBoxFor(m => m.AceptaCondiciones, new { @class = "form-check-input" })
+            <label class="form-check-label" for="AceptaCondiciones">Acepto las condiciones de la reserva <span class="req">*</span></label>
+            @Html.ValidationMessageFor(m => m.AceptaCondiciones)
+        </div>
+    </div>
+    <div class="alert alert-info" role="status"><strong>Información:</strong> La reserva pendiente se conservará según la política de retención propuesta (DP-07).</div>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="submit" name="Accion" value="reservar" class="btn btn-outline-primary" data-texto-carga="Registrando reserva…">Confirmar reserva</button>
+        <button type="submit" name="Accion" value="pagar" class="btn btn-primary" data-texto-carga="Registrando reserva…">Confirmar y pagar</button>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Pasajeros")">Volver a modificar</a>
+    </div>
+}
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

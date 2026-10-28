@@ -1,0 +1,112 @@
+﻿@model SeleccionAsientoVM
+@{
+    ViewBag.Title = "Selección de asientos";
+    var op = Model.Operacion;
+}
+@* Pantalla 8. Selección de vuelo y asiento (selección TEMPORAL, revalidada en el servidor). *@
+@Html.Partial("_Pasos", 1)
+<h1 class="h3">Selección de vuelo y asiento</h1>
+
+@if (Model.Mensaje != null)
+{
+    <div class="alert alert-@Model.TipoMensaje" role="alert"><strong>@(Model.TipoMensaje == "warning" ? "Advertencia:" : "Información:")</strong> @Model.Mensaje</div>
+}
+@Html.ValidationSummary(false, "", new { @class = "alert alert-danger", role = "alert" })
+<div id="mensajesMapa"></div>
+
+@using (Html.BeginForm("SeleccionAsiento", "Reservas", FormMethod.Post, new { id = "formAsientos", data_pasajeros = Model.Pasajeros, data_tramos = Model.Tramos.Count }))
+{
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="vuelos" value="@string.Join(",", op.VueloIds)" />
+    <input type="hidden" name="pasajeros" value="@op.Pasajeros" />
+    for (int p = 0; p < op.Pasajeros; p++)
+    {
+        for (int t = 0; t < op.VueloIds.Count; t++)
+        {
+            <input type="hidden" id="asiento_@(p)_@(t)" name="asiento_@(p)_@(t)" value="@(op.Asientos.Count > p && op.Asientos[p].Count > t ? op.Asientos[p][t] : 0)" />
+        }
+    }
+
+    if (Model.Tramos.Count > 1)
+    {
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            @foreach (var tr in Model.Tramos)
+            {
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(tr.Indice == 0 ? "active" : "")" id="tab_@tr.Indice" data-bs-toggle="tab" data-bs-target="#tramo_@tr.Indice"
+                            data-tramo-tab="@tr.Indice" type="button" role="tab" aria-controls="tramo_@tr.Indice" aria-selected="@(tr.Indice == 0 ? "true" : "false")">
+                        Tramo @(tr.Indice + 1) · @tr.Info.Vuelo.CiudadOrigen → @tr.Info.Vuelo.CiudadDestino @Formato.Hora(tr.Info.Vuelo.HoraSalida)
+                    </button>
+                </li>
+            }
+        </ul>
+    }
+
+    <div class="tab-content">
+        @foreach (var tr in Model.Tramos)
+        {
+            <div class="tab-pane fade @(tr.Indice == 0 ? "show active" : "")" id="tramo_@tr.Indice" role="tabpanel" aria-labelledby="tab_@tr.Indice">
+                @Html.Partial("_BarraVuelo", tr.Info, new ViewDataDictionary { { "Tramo", tr.Indice } })
+                <div class="tarjeta mb-2">
+                    <p class="small text-muted mb-2"><span class="d-none d-md-inline">◀ Proa (frente) · </span><span class="d-md-none">▲ Proa arriba · </span>Haga clic en un asiento verde para asignarlo al pasajero activo.</p>
+                    @Html.Partial("_MapaAsientos", tr.Mapa)
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-3" data-actualizar="@Url.Action("EstadoAsientos", "Vuelos", new { id = tr.Info.Vuelo.VueloId })" data-mapa="#mapa_@tr.Indice">Actualizar disponibilidad</button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-lg-8">
+            <div class="tarjeta">
+                <h2 class="tarjeta-titulo">Resumen de la selección · pasajero activo: <span id="pasajeroActivoTexto">Pasajero 1</span></h2>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-2">
+                        <thead>
+                            <tr>
+                                <th scope="col">Pasajero</th>
+                                @foreach (var tr in Model.Tramos)
+                                {
+                                    <th scope="col">Tramo @(tr.Indice + 1)</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int p = 0; p < op.Pasajeros; p++)
+                            {
+                                <tr data-pasajero="@p" role="button" tabindex="0" title="Hacer activo al Pasajero @(p + 1)">
+                                    <th scope="row">Pasajero @(p + 1)</th>
+                                    @for (int t = 0; t < op.VueloIds.Count; t++)
+                                    {
+                                        <td id="resumen_@(p)_@(t)">—</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" id="btnQuitar" class="btn btn-sm btn-outline-secondary">Quitar selección</button>
+                <p id="faltantes" class="small text-warning-emphasis mt-2 mb-0">Falta asignar asiento a uno o más pasajeros.</p>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="alert alert-info" role="status"><strong>Información:</strong> Su selección es temporal: la reserva se registra al confirmar en el paso 3.</div>
+            <div class="d-grid gap-2">
+                @if (Model.SinAsientos)
+                {
+                    <a class="btn btn-primary" href="@Url.Action("Buscar", "Vuelos")">Elegir otro vuelo</a>
+                }
+                else
+                {
+                    <button type="submit" id="btnContinuar" class="btn btn-primary" disabled>Continuar</button>
+                }
+                <a class="btn btn-outline-secondary" href="@Url.Action("Disponibilidad", "Vuelos", new { id = op.VueloIds[0], pasajeros = op.Pasajeros, vuelos = string.Join(",", op.VueloIds) })">Regresar</a>
+            </div>
+        </div>
+    </div>
+}
+<div id="anuncio" class="visually-hidden" aria-live="polite"></div>
+
+@section scripts {
+    @Scripts.Render("~/bundles/asientos")
+}

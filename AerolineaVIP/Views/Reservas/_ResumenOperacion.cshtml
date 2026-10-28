@@ -1,0 +1,13 @@
+﻿@model ResumenOperacionVM
+<div class="tarjeta resumen pegajoso">
+    <h2 class="tarjeta-titulo">Resumen</h2>
+    <dl>
+        <dt>Ruta</dt><dd>@Model.RutaTexto</dd>
+        <dt>Fecha</dt><dd>@(Model.Tramos.Any() ? Formato.Fecha(Model.Tramos.First().Fecha) : "—")</dd>
+        <dt>Tramos</dt><dd>@Model.Tramos.Count</dd>
+        <dt>Pasajeros</dt><dd>@Model.Pasajeros.Count</dd>
+        <dt>Asientos</dt><dd>@string.Join(", ", Model.Pasajeros.SelectMany(p => p.Asientos).Distinct())</dd>
+        <dt>Total estimado</dt><dd class="total">@Formato.Dinero(Model.Total, Model.Moneda)</dd>
+    </dl>
+    <p class="texto-ayuda mt-2 mb-0">Tarifa de ejemplo por pasajero y tramo (DP-04).</p>
+</div>

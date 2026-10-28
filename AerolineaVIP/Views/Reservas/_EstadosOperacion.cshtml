@@ -1,0 +1,40 @@
+﻿@model DetalleReservaVM
+@* Tres etiquetas separadas: Reserva · Compra · Pago simulado (estados diferenciados, 11.4.1). *@
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="tarjeta h-100">
+            <div class="tarjeta-titulo">Reserva</div>
+            <span class="@Formato.ClaseEstado(Model.Reserva.EstadoReservaCodigo)">@Formato.TextoEstadoReserva(Model.Reserva.EstadoReservaCodigo)</span>
+            <div class="texto-ayuda mt-2">
+                @Model.Reserva.CodigoReserva · creada el @Formato.FechaHora(Model.Reserva.FechaCreacion)
+                @if (Model.Reserva.EstadoReservaCodigo == "PENDIENTE" && Model.Reserva.FechaExpiracion.HasValue)
+                {
+                    <br /><text>Expira el @Formato.FechaHora(Model.Reserva.FechaExpiracion) (DP-07)</text>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="tarjeta h-100">
+            <div class="tarjeta-titulo">Compra</div>
+            <span class="@Formato.ClaseEstado(Model.EstadoCompra)">@Formato.TextoEstadoCompra(Model.EstadoCompra)</span>
+            @if (Model.Compra != null)
+            {
+                <div class="texto-ayuda mt-2">@Formato.Dinero(Model.Compra.Importe, Model.Compra.MonedaCodigo) · @Formato.FechaHora(Model.Compra.FechaCompra)</div>
+            }
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="tarjeta h-100">
+            <div class="tarjeta-titulo">Pago simulado</div>
+            <span class="@Formato.ClaseEstado(Model.EstadoPago)">@Formato.TextoEstadoPago(Model.EstadoPago)</span>
+            @if (Model.UltimoPago != null)
+            {
+                <div class="texto-ayuda mt-2">
+                    @Model.UltimoPago.CodigoOperacion · @Model.UltimoPago.MarcaTarjeta.Nombre **** @Model.UltimoPago.UltimosCuatroDigitos
+                    <br />@Model.UltimoPago.MensajeResultado
+                </div>
+            }
+        </div>
+    </div>
+</div>

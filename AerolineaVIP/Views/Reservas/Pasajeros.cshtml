@@ -1,0 +1,103 @@
+﻿@model PasajerosVM
+@{
+    ViewBag.Title = "Datos de los pasajeros";
+}
+@* Pantalla 9. Registro de datos del pasajero (la persona que viaja puede ser distinta del usuario). *@
+@Html.Partial("_Pasos", 2)
+<h1 class="h3">Registro de datos del pasajero</h1>
+<p class="text-muted small">Los campos marcados con <span class="req">*</span> son obligatorios. Si el documento ya está registrado, se reutilizan los datos del pasajero.</p>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        @using (Html.BeginForm("Pasajeros", "Reservas", FormMethod.Post, new { id = "formPasajeros", novalidate = "novalidate" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+            <div class="accordion" id="acordeonPasajeros">
+                @for (int i = 0; i < Model.Pasajeros.Count; i++)
+                {
+                    var abierto = i == 0 || !ViewData.ModelState.IsValid;
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="cab_@i">
+                            <button class="accordion-button @(abierto ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#pas_@i"
+                                    aria-expanded="@(abierto ? "true" : "false")" aria-controls="pas_@i">
+                                Pasajero @(i + 1) · Asiento @(Model.AsientosPorPasajero != null && i < Model.AsientosPorPasajero.Count ? Model.AsientosPorPasajero[i] : "—")
+                            </button>
+                        </h2>
+                        <div id="pas_@i" class="accordion-collapse collapse @(abierto ? "show" : "")" aria-labelledby="cab_@i">
+                            <div class="accordion-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        @Html.LabelFor(m => m.Pasajeros[i].TipoDocumentoCodigo, new { @class = "form-label" }) <span class="req">*</span>
+                                        @Html.DropDownListFor(m => m.Pasajeros[i].TipoDocumentoCodigo, new SelectList(Model.TiposDocumento, "Value", "Text", Model.Pasajeros[i].TipoDocumentoCodigo), new { @class = "form-select" })
+                                        @Html.ValidationMessageFor(m => m.Pasajeros[i].TipoDocumentoCodigo)
+                                    </div>
+                                    <div class="col-md-6">
+                                        @Html.LabelFor(m => m.Pasajeros[i].NumeroDocumento, new { @class = "form-label" }) <span class="req">*</span>
+                                        @Html.TextBoxFor(m => m.Pasajeros[i].NumeroDocumento, new
+                                        {
+                                            @class = "form-control",
+                                            maxlength = 20,
+                                            autocomplete = "off",
+                                            data_tipo_documento = "#Pasajeros_" + i + "__TipoDocumentoCodigo",
+                                            aria_describedby = "ayudaDoc_" + i
+                                        })
+                                        <div id="ayudaDoc_@i" class="texto-ayuda">Cédula: 10 dígitos · Pasaporte: 5 a 20 letras o números.</div>
+                                        @Html.ValidationMessageFor(m => m.Pasajeros[i].NumeroDocumento)
+                                    </div>
+                                    <div class="col-md-6">
+                                        @Html.LabelFor(m => m.Pasajeros[i].Nombres, new { @class = "form-label" }) <span class="req">*</span>
+                                        @Html.TextBoxFor(m => m.Pasajeros[i].Nombres, new { @class = "form-control", maxlength = 100, autocomplete = "given-name" })
+                                        @Html.ValidationMessageFor(m => m.Pasajeros[i].Nombres)
+                                    </div>
+                                    <div class="col-md-6">
+                                        @Html.LabelFor(m => m.Pasajeros[i].Apellidos, new { @class = "form-label" }) <span class="req">*</span>
+                                        @Html.TextBoxFor(m => m.Pasajeros[i].Apellidos, new { @class = "form-control", maxlength = 100, autocomplete = "family-name" })
+                                        @Html.ValidationMessageFor(m => m.Pasajeros[i].Apellidos)
+                                    </div>
+                                    <div class="col-md-4">
+                                        @Html.LabelFor(m => m.Pasajeros[i].FechaNacimiento, new { @class = "form-label" })
+                                        @Html.TextBoxFor(m => m.Pasajeros[i].FechaNacimiento, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control", min = "1900-01-02", max = DateTime.Today.ToString("yyyy-MM-dd") })
+                                        @Html.ValidationMessageFor(m => m.Pasajeros[i].FechaNacimiento)
+                                    </div>
+                                    <div class="col-md-4">
+                                        @Html.LabelFor(m => m.Pasajeros[i].Correo, new { @class = "form-label" })
+                                        @Html.TextBoxFor(m => m.Pasajeros[i].Correo, new { type = "email", @class = "form-control", maxlength = 256, placeholder = "correo@ejemplo.com" })
+                                        @Html.ValidationMessageFor(m => m.Pasajeros[i].Correo)
+                                    </div>
+                                    <div class="col-md-4">
+                                        @Html.LabelFor(m => m.Pasajeros[i].Telefono, new { @class = "form-label" })
+                                        @Html.TextBoxFor(m => m.Pasajeros[i].Telefono, new { type = "tel", @class = "form-control", maxlength = 20, placeholder = "0990000000" })
+                                        @Html.ValidationMessageFor(m => m.Pasajeros[i].Telefono)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary" data-texto-carga="Guardando…">Continuar</button>
+                <a class="btn btn-outline-secondary" href="@Url.Action("SeleccionAsiento", new { vuelos = string.Join(",", Model.Resumen.Tramos.Select(t => t.VueloId)), pasajeros = Model.Pasajeros.Count })">Regresar a asientos</a>
+            </div>
+        }
+    </div>
+    <aside class="col-lg-4">
+        @Html.Partial("_ResumenOperacion", Model.Resumen)
+    </aside>
+</div>
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        // Al cambiar el tipo de documento se vuelve a validar el número (cédula = 10 dígitos).
+        $(document).on('change', 'select[id$="__TipoDocumentoCodigo"]', function () {
+            var $doc = $('input[data-tipo-documento="#' + this.id + '"]');
+            if ($doc.val()) { $doc.valid(); }
+        });
+        // Al enviar con errores se abren los bloques que los contienen.
+        $('#formPasajeros').on('invalid-form.validate', function () {
+            setTimeout(function () { $('.input-validation-error').closest('.accordion-collapse').addClass('show'); }, 0);
+        });
+    </script>
+}
