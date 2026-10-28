@@ -1,0 +1,78 @@
+﻿@model BusquedaVM
+@{
+    ViewBag.Title = "Buscar vuelos";
+}
+@* Pantalla 5. Búsqueda de vuelos. *@
+<div class="row g-4">
+    <div class="col-lg-8">
+        <h1 class="h3">Buscar vuelos</h1>
+        <p class="text-muted small">Los campos marcados con <span class="req">*</span> son obligatorios.</p>
+        @if (ViewBag.Informacion != null)
+        {
+            <div class="alert alert-info" role="status"><strong>Información:</strong> @ViewBag.Informacion</div>
+        }
+        @if (ViewBag.Advertencia != null)
+        {
+            <div class="alert alert-warning" role="alert"><strong>Advertencia:</strong> @ViewBag.Advertencia</div>
+        }
+        @using (Html.BeginForm("Resultados", "Vuelos", FormMethod.Get, new { id = "formBuscar", @class = "tarjeta", novalidate = "novalidate" }))
+        {
+            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+            <div class="row g-3">
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.Origen, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.DropDownListFor(m => m.Origen, Model.Origenes, new
+                    {
+                        @class = "form-select",
+                        data_destinos_url = Url.Action("Destinos"),
+                        data_destino = "#Destino",
+                        data_boton = "#btnBuscar",
+                        data_inicial = "UIO"
+                    })
+                    @Html.ValidationMessageFor(m => m.Origen)
+                </div>
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.Destino, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.DropDownListFor(m => m.Destino, Model.Destinos, Model.Destinos.Any() ? "Seleccionar destino" : "No hay destinos disponibles desde este origen", new { @class = "form-select" })
+                    @Html.ValidationMessageFor(m => m.Destino)
+                </div>
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.Fecha, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.TextBoxFor(m => m.Fecha, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control", data_min_hoy = "true" })
+                    @Html.ValidationMessageFor(m => m.Fecha)
+                </div>
+                <div class="col-md-6">
+                    @Html.LabelFor(m => m.Pasajeros, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.TextBoxFor(m => m.Pasajeros, new { type = "number", min = 1, max = 7, @class = "form-control", data_inicial = "1", aria_describedby = "ayudaPax" })
+                    <div id="ayudaPax" class="texto-ayuda">De 1 a 7.</div>
+                    @Html.ValidationMessageFor(m => m.Pasajeros)
+                </div>
+            </div>
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" id="btnBuscar" class="btn btn-primary px-4" data-texto-carga="Buscando vuelos…">Buscar</button>
+                <button type="button" class="btn btn-outline-secondary" data-limpiar="#formBuscar">Limpiar filtros</button>
+            </div>
+        }
+    </div>
+    <aside class="col-lg-4">
+        <div class="tarjeta resumen pegajoso">
+            <h2 class="tarjeta-titulo">Días de operación</h2>
+            <table class="table table-sm mb-0">
+                <thead><tr><th scope="col">Ruta</th><th scope="col">Días</th></tr></thead>
+                <tbody>
+                    @foreach (var r in Model.DiasOperacion)
+                    {
+                        <tr>
+                            <td>@r.Nombre @if (r.Nota != null) { <br /><span class="texto-ayuda">@r.Nota</span> }</td>
+                            <td class="text-nowrap">@r.Dias</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </aside>
+</div>
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

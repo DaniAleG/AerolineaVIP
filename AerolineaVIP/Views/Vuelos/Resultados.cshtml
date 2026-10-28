@@ -1,0 +1,103 @@
+﻿@model ResultadosVM
+@{
+    ViewBag.Title = "Resultados de vuelos";
+    var b = Model.Busqueda;
+    ViewData["Pasajeros"] = b.Pasajeros ?? 1;
+}
+@* Pantalla 6. Resultados de búsqueda y horarios (conserva el wireframe 11.4.4). *@
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Resultados de vuelos</h1>
+        <p class="mb-0 text-muted">
+            @Model.CiudadOrigen → @Model.CiudadDestino · @Formato.FechaConDia(b.Fecha.Value) · @b.Pasajeros @(b.Pasajeros == 1 ? "pasajero" : "pasajeros")
+            · <a href="@Url.Action("Buscar", new { origen = b.Origen, destino = b.Destino, fecha = b.Fecha.Value.ToString("yyyy-MM-dd"), pasajeros = b.Pasajeros })">Modificar búsqueda</a>
+        </p>
+    </div>
+    @if (Model.Directos.Count > 1)
+    {
+        <div>
+            <label for="filtroHorario" class="form-label mb-1">Filtro de horario (opcional)</label>
+            <select id="filtroHorario" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option value="manana">Mañana</option>
+                <option value="tarde">Tarde</option>
+                <option value="noche">Noche</option>
+            </select>
+        </div>
+    }
+</div>
+
+@if (!Model.HayResultados)
+{
+    <div class="estado-vacio tarjeta">
+        <div class="alert alert-info d-inline-block" role="status"><strong>Información:</strong> @(Model.MensajeInfo ?? "No hay vuelos para los criterios seleccionados.")</div>
+        @if (Model.ProximasFechas.Any())
+        {
+            <p class="mb-2">Próximas fechas con vuelos programados para esta ruta:</p>
+            <div class="d-flex flex-wrap gap-2 justify-content-center mb-3">
+                @foreach (var f in Model.ProximasFechas)
+                {
+                    <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Resultados", new { Origen = b.Origen, Destino = b.Destino, Fecha = f.ToString("yyyy-MM-dd"), Pasajeros = b.Pasajeros })">@Formato.FechaConDia(f)</a>
+                }
+            </div>
+        }
+        <a class="btn btn-primary" href="@Url.Action("Buscar", new { origen = b.Origen, destino = b.Destino, pasajeros = b.Pasajeros })">Modificar búsqueda</a>
+    </div>
+}
+
+@foreach (var r in Model.Directos)
+{
+    @Html.Partial("_TarjetaVuelo", r, ViewData)
+}
+
+@foreach (var it in Model.ConEscala)
+{
+    var t1 = it.Tramos[0];
+    var t2 = it.Tramos[1];
+    <article class="tarjeta mb-3" aria-label="Itinerario con escala">
+        <div class="tarjeta-vuelo">
+            <div>
+                <div class="horario">@Formato.Horario(t1.Vuelo.HoraSalida, t2.Vuelo.HoraLlegada) <span class="fs-6 fw-normal text-muted">· @Model.CiudadOrigen → @Model.CiudadDestino · 1 escala en @it.Escala</span></div>
+                @foreach (var t in it.Tramos)
+                {
+                    var n = it.Tramos.IndexOf(t) + 1;
+                    <div class="tramo-linea small">
+                        <strong>Tramo @n:</strong> @Formato.Horario(t.Vuelo.HoraSalida, t.Vuelo.HoraLlegada) · @t.Vuelo.CiudadOrigen → @t.Vuelo.CiudadDestino · @t.Vuelo.CodigoVuelo ·
+                        @if (t.Motivo == null)
+                        {
+                            <span class="estado estado-ok">Tramo @n: @t.Disponibles disp.</span>
+                        }
+                        else
+                        {
+                            <span class="estado estado-neutro">@t.Motivo</span>
+                        }
+                        <a class="ms-1" href="@Url.Action("Disponibilidad", new { id = t.Vuelo.VueloId, pasajeros = b.Pasajeros })">Consultar disponibilidad</a>
+                    </div>
+                }
+                <details class="mt-2">
+                    <summary class="small">Ver detalles</summary>
+                    <ul class="small mb-0 mt-1">
+                        <li>Conexión en @it.Escala: @it.MinutosConexion minutos (mínimo propuesto: @Politicas.MinutosMinimosConexion min, DP-10).</li>
+                        <li>Tarifa de ejemplo por pasajero: @Formato.Dinero(it.Tramos.Sum(x => x.Vuelo.TarifaReferencial)) (suma de tramos, DP-04).</li>
+                        <li>Cada tramo usa el inventario de su vuelo: un asiento vendido por tramo no puede venderse dos veces (DP-09).</li>
+                    </ul>
+                </details>
+            </div>
+            <div class="acciones">
+                @if (it.Seleccionable)
+                {
+                    <a class="btn btn-primary" href="@Url.Action("SeleccionAsiento", "Reservas", new { id = t1.Vuelo.VueloId, vuelos = it.IdsVuelos, pasajeros = b.Pasajeros })">Seleccionar</a>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary" disabled aria-disabled="true">Seleccionar</button>
+                }
+            </div>
+        </div>
+    </article>
+}
+
+@if (Model.HayResultados)
+{
+    <p class="texto-ayuda">La disponibilidad se verificará para la fecha y el vuelo seleccionados. «Seleccionar vuelo» requiere iniciar sesión.</p>
+}

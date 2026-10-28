@@ -1,0 +1,64 @@
+﻿@model DisponibilidadVM
+@{
+    ViewBag.Title = "Disponibilidad de asientos";
+    var info = Model.Info;
+}
+@* Pantalla 7. Consulta de disponibilidad de asientos (solo consulta; no se seleccionan asientos). *@
+<h1 class="h3">Disponibilidad de asientos</h1>
+@Html.Partial("_BarraVuelo", info)
+
+@if (Model.Mensaje != null)
+{
+    <div class="alert alert-@Model.TipoMensaje" role="@(Model.TipoMensaje == "warning" ? "alert" : "status")">
+        <strong>@(Model.TipoMensaje == "warning" ? "Advertencia:" : "Información:")</strong> @Model.Mensaje
+    </div>
+}
+
+@if (info.TieneAeronave && info.Vuelo.EstadoVueloCodigo != "CANCELADO")
+{
+    <div class="tarjeta mb-3">
+        <p class="small text-muted mb-2"><span class="d-none d-md-inline">◀ Proa (frente) · Lado derecho (D) arriba · Lado izquierdo (I) abajo</span><span class="d-md-none">▲ Proa arriba · Lado izquierdo (I) a la izquierda · Lado derecho (D) a la derecha</span></p>
+        <div id="mapaConsulta">
+            @Html.Partial("_MapaAsientos", Model.Mapa)
+        </div>
+    </div>
+
+    <div class="row g-3 align-items-stretch">
+        <div class="col-md-5">
+            <div class="tarjeta resumen h-100">
+                <h2 class="tarjeta-titulo">Resumen</h2>
+                <dl>
+                    <dt>Asientos disponibles</dt><dd><span data-resumen-disponibles="0">@info.Disponibles</span> de @info.Capacidad</dd>
+                    <dt>Reservados</dt><dd data-resumen-reservados="0">@info.Reservados</dd>
+                    <dt>Ocupados</dt><dd data-resumen-ocupados="0">@info.Ocupados</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="alert alert-info h-100 mb-0" role="status">
+                <strong>Información:</strong> Disponibilidad calculada a las <span data-corte>@Model.Corte.ToString("HH:mm")</span>. Se comprobará nuevamente al confirmar la reserva.
+            </div>
+        </div>
+    </div>
+}
+
+<div class="mt-4 d-flex flex-wrap gap-2 no-imprimir">
+    @if (info.TieneAeronave)
+    {
+        <button type="button" class="btn btn-outline-primary" data-actualizar="@Url.Action("EstadoAsientos", new { id = info.Vuelo.VueloId })" data-mapa="#mapa_0">Actualizar disponibilidad</button>
+    }
+    @if (Model.PuedeContinuar)
+    {
+        <a class="btn btn-primary" href="@Url.Action("SeleccionAsiento", "Reservas", new { id = info.Vuelo.VueloId, vuelos = ViewBag.Vuelos, pasajeros = Model.Pasajeros })">Continuar</a>
+    }
+    else
+    {
+        <button type="button" class="btn btn-primary" disabled aria-disabled="true">Continuar</button>
+    }
+    <a class="btn btn-outline-secondary" href="@Model.UrlResultados">Regresar a resultados</a>
+</div>
+<div id="anuncio" class="visually-hidden" aria-live="polite"></div>
+
+@section scripts {
+    @Scripts.Render("~/bundles/asientos")
+}

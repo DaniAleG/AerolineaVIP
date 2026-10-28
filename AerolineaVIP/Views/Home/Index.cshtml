@@ -1,33 +1,132 @@
-﻿@{
-    ViewBag.Title = "Home Page";
+﻿@model BusquedaVM
+@{
+    ViewBag.Title = "Inicio";
 }
+@* Pantalla 1. Página de inicio (estructura del wireframe 11.4.3 con diseño propio del grupo). *@
+<section class="portada" aria-labelledby="tituloPortada">
+    <span class="etiqueta">Jets privados · Ecuador</span>
+    <h1 id="tituloPortada">Vuela a tu próximo destino</h1>
+    <p class="lead">Viajes privados con atención personalizada. Siete asientos por vuelo, cabina exclusiva y conexiones a Galápagos.</p>
+    <img class="avion-fondo" src="~/Content/img/avion.svg" alt="" />
+</section>
 
-<main>
-    <section class="row" aria-labelledby="aspnetTitle">
-        <h1 id="title">ASP.NET</h1>
-        <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-        <p><a href="https://asp.net" class="btn btn-primary btn-md">Learn more &raquo;</a></p>
-    </section>
-
-    <div class="row">
-        <section class="col-md-4" aria-labelledby="gettingStartedTitle">
-            <h2 id="gettingStartedTitle">Getting started</h2>
-            <p>
-                ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-                enables a clean separation of concerns and gives you full control over markup
-                for enjoyable, agile development.
-            </p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="librariesTitle">
-            <h2 id="librariesTitle">Get more libraries</h2>
-            <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="hostingTitle">
-            <h2 id="hostingTitle">Web Hosting</h2>
-            <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
-        </section>
+<section class="buscador" aria-labelledby="tituloBuscador">
+    <div class="tarjeta">
+        <h2 id="tituloBuscador" class="h5 mb-3">Encuentra tu vuelo</h2>
+        @if (ViewBag.ErrorBD != null)
+        {
+            <div class="alert alert-danger" role="alert"><strong>Error:</strong> @ViewBag.ErrorBD</div>
+        }
+        @using (Html.BeginForm("Resultados", "Vuelos", FormMethod.Get, new { id = "formBusqueda", @class = "row g-3", novalidate = "novalidate" }))
+        {
+            <div class="col-12 col-md-6 col-lg-3">
+                @Html.LabelFor(m => m.Origen, new { @class = "form-label" }) <span class="req">*</span>
+                @Html.DropDownListFor(m => m.Origen, Model.Origenes, new
+                {
+                    @class = "form-select",
+                    data_destinos_url = Url.Action("Destinos", "Vuelos"),
+                    data_destino = "#Destino",
+                    data_boton = "#btnBuscar"
+                })
+                @Html.ValidationMessageFor(m => m.Origen)
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                @Html.LabelFor(m => m.Destino, new { @class = "form-label" }) <span class="req">*</span>
+                @Html.DropDownListFor(m => m.Destino, Model.Destinos, Model.Destinos.Any() ? "Seleccionar destino" : "Sin destinos disponibles", new { @class = "form-select" })
+                @Html.ValidationMessageFor(m => m.Destino)
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                @Html.LabelFor(m => m.Fecha, new { @class = "form-label" }) <span class="req">*</span>
+                @Html.TextBoxFor(m => m.Fecha, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control", data_min_hoy = "true" })
+                @Html.ValidationMessageFor(m => m.Fecha)
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                @Html.LabelFor(m => m.Pasajeros, new { @class = "form-label" }) <span class="req">*</span>
+                @Html.TextBoxFor(m => m.Pasajeros, new { type = "number", min = 1, max = 7, @class = "form-control", aria_describedby = "ayudaPasajeros" })
+                <div id="ayudaPasajeros" class="texto-ayuda">De 1 a 7 (capacidad máxima por vuelo).</div>
+                @Html.ValidationMessageFor(m => m.Pasajeros)
+            </div>
+            <div class="col-12 d-flex flex-wrap align-items-center gap-3">
+                <button type="submit" id="btnBuscar" class="btn btn-primary px-4" data-texto-carga="Buscando…" disabled="@(Model.Destinos.Any() ? null : "disabled")">Buscar vuelos</button>
+                <span class="texto-ayuda">Horarios sujetos a la programación establecida y disponibilidad real.</span>
+            </div>
+        }
     </div>
-</main>
+</section>
+
+<section class="mt-5" aria-labelledby="tituloDestinos">
+    <h2 id="tituloDestinos" class="h4 mb-3">Destinos</h2>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <article class="destino-card">
+                <div class="franja"></div>
+                <div class="cuerpo-card">
+                    <h3>Guayaquil</h3>
+                    <p class="mb-1 fw-semibold">Martes, jueves y sábado</p>
+                    <p class="texto-ayuda mb-0">09:00 · 14:00 (regreso) · 19:00 — vuelos de 1 hora desde Quito.</p>
+                </div>
+            </article>
+        </div>
+        <div class="col-md-4">
+            <article class="destino-card">
+                <div class="franja"></div>
+                <div class="cuerpo-card">
+                    <h3>Manta</h3>
+                    <p class="mb-1 fw-semibold">Lunes, miércoles y viernes</p>
+                    <p class="texto-ayuda mb-0">09:00 · 14:00 (regreso) · 19:00 — vuelos de 1 hora desde Quito.</p>
+                </div>
+            </article>
+        </div>
+        <div class="col-md-4">
+            <article class="destino-card">
+                <div class="franja"></div>
+                <div class="cuerpo-card">
+                    <h3>Galápagos <small class="text-muted fs-6">(escala en Guayaquil)</small></h3>
+                    <p class="mb-1 fw-semibold">Domingo</p>
+                    <p class="texto-ayuda mb-0">Ida 09:00 → 13:00 · regreso 15:00 → 19:00, en cuatro tramos.</p>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="mt-5" aria-labelledby="tituloFlota">
+    <div class="row g-3 align-items-stretch">
+        <div class="col-lg-5">
+            <div class="tarjeta h-100">
+                <h2 id="tituloFlota" class="h5">Nuestra flota</h2>
+                <p class="mb-3">Tres jets <strong>Embraer Phenom 300E</strong> con cabina de siete asientos individuales de ventanilla.</p>
+                <div class="row text-center g-2">
+                    <div class="col-4"><div class="cifra">3</div><div class="cifra-texto">Aeronaves</div></div>
+                    <div class="col-4"><div class="cifra">7</div><div class="cifra-texto">Asientos por vuelo</div></div>
+                    <div class="col-4"><div class="cifra">4</div><div class="cifra-texto">Counters</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="tarjeta h-100">
+                <h2 class="h5">Días de operación</h2>
+                @if (Model.DiasOperacion.Any())
+                {
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th scope="col">Ruta</th><th scope="col">Días</th><th scope="col">Nota</th></tr></thead>
+                        <tbody>
+                            @foreach (var r in Model.DiasOperacion)
+                            {
+                                <tr><td>@r.Nombre</td><td>@r.Dias</td><td class="texto-ayuda">@r.Nota</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="texto-ayuda mb-0">La programación se mostrará al conectar la base de datos.</p>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

@@ -1,0 +1,50 @@
+﻿@model VueloResultadoVM
+@{
+    var pasajeros = (int)(ViewData["Pasajeros"] ?? 1);
+    var v = Model.Vuelo;
+    var franja = v.HoraSalida.Hours < 12 ? "manana" : v.HoraSalida.Hours < 18 ? "tarde" : "noche";
+}
+<article class="tarjeta tarjeta-vuelo mb-3 @(Model.Seleccionable ? "" : "no-disponible")" data-franja="@franja" aria-label="Vuelo @v.CodigoVuelo">
+    <div>
+        <div class="horario">@Formato.Horario(v.HoraSalida, v.HoraLlegada) <span class="fs-6 fw-normal text-muted">· @Model.Franja · Directo</span></div>
+        <div class="meta">
+            @v.CodigoVuelo · @v.CiudadOrigen (@v.Origen) → @v.CiudadDestino (@v.Destino) ·
+            @if (Model.Matricula != null) { <text>Aeronave asignada</text> } else { <text>Sin aeronave asignada</text> }
+            ·
+            @if (Model.Motivo == null)
+            {
+                <span class="estado estado-ok">@Model.Disponibles de @Model.Capacidad disponibles</span>
+                if (Model.Disponibles <= 2)
+                {
+                    <span class="estado estado-pendiente">Quedan @Model.Disponibles asientos disponibles</span>
+                }
+            }
+            else
+            {
+                <span class="@(v.EstadoVueloCodigo == "CANCELADO" ? "estado estado-error" : "estado estado-neutro")">@Model.Motivo</span>
+            }
+        </div>
+        <details class="mt-2">
+            <summary class="small">Ver detalles</summary>
+            <ul class="small mb-0 mt-1">
+                <li>Fecha: @Formato.FechaConDia(v.FechaOperacion) · Estado: @Formato.TextoEstadoVuelo(v.EstadoVueloCodigo)</li>
+                <li>Aeronave: @(Model.Matricula ?? "pendiente de asignación") · Embraer Phenom 300E · capacidad máxima 7</li>
+                <li>Tarifa de ejemplo por pasajero: @Formato.Dinero(v.TarifaReferencial) (DP-04)</li>
+            </ul>
+        </details>
+    </div>
+    <div class="acciones">
+        @if (v.EstadoVueloCodigo != "CANCELADO")
+        {
+            <a class="btn btn-outline-primary" href="@Url.Action("Disponibilidad", "Vuelos", new { id = v.VueloId, pasajeros })">Consultar disponibilidad</a>
+        }
+        @if (Model.Seleccionable)
+        {
+            <a class="btn btn-primary" href="@Url.Action("SeleccionAsiento", "Reservas", new { id = v.VueloId, vuelos = v.VueloId, pasajeros })">Seleccionar vuelo</a>
+        }
+        else
+        {
+            <button type="button" class="btn btn-primary" disabled aria-disabled="true">Seleccionar vuelo</button>
+        }
+    </div>
+</article>
