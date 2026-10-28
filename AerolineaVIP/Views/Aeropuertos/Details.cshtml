@@ -1,0 +1,26 @@
+﻿@model AerolineaVIP.Models.Dominio.Aeropuerto
+@{
+    ViewBag.Title = "Detalle de aeropuerto";
+}
+<nav aria-label="Ruta de navegación"><ol class="breadcrumb">
+    <li class="breadcrumb-item">@Html.ActionLink("Administración", "Index", "Admin")</li>
+    <li class="breadcrumb-item">@Html.ActionLink("Aeropuertos", "Index")</li>
+    <li class="breadcrumb-item active" aria-current="page">Detalle</li>
+</ol></nav>
+<h1 class="h3">Detalle de aeropuerto</h1>
+<div class="tarjeta">
+    <dl class="row mb-0">
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.CodigoIATA)</dt>
+        <dd class="col-sm-8">@(Model.CodigoIATA)</dd>
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Nombre)</dt>
+        <dd class="col-sm-8">@(Model.Nombre)</dd>
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Localidad)</dt>
+        <dd class="col-sm-8">@(Model.Localidad)</dd>
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Activo)</dt>
+        <dd class="col-sm-8">@(Model.Activo ? "Sí" : "No")</dd>
+    </dl>
+</div>
+<div class="mt-3 d-flex gap-2">
+    @if (User.IsInRole(AerolineaVIP.RolesApp.SuperUsuario)) { @Html.ActionLink("Editar", "Edit", new { id = Model.AeropuertoId }, new { @class = "btn btn-primary" }) }
+    @Html.ActionLink("Volver a la lista", "Index", null, new { @class = "btn btn-outline-secondary" })
+</div>

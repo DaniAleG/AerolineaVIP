@@ -1,0 +1,41 @@
+﻿@model AerolineaVIP.Models.Dominio.Aeronave
+@{
+    ViewBag.Title = "Nuevo registro: aeronave";
+}
+<nav aria-label="Ruta de navegación"><ol class="breadcrumb">
+    <li class="breadcrumb-item">@Html.ActionLink("Administración", "Index", "Admin")</li>
+    <li class="breadcrumb-item">@Html.ActionLink("Flota (aeronaves)", "Index")</li>
+    <li class="breadcrumb-item active" aria-current="page">Crear</li>
+</ol></nav>
+<h1 class="h3">Nuevo registro: aeronave</h1>
+<p class="text-muted small">Los campos marcados con <span class="req">*</span> son obligatorios.</p>
+@using (Html.BeginForm("Create", "Aeronaves", null, FormMethod.Post, new { @class = "tarjeta js-form-carga", novalidate = "novalidate" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+    <div class="row g-3">
+            <div class="col-md-6">
+                @Html.LabelFor(model => model.Matricula, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
+                @Html.EditorFor(model => model.Matricula, new { htmlAttributes = new { @class = "form-control", style = "text-transform:uppercase" } })
+                @Html.ValidationMessageFor(model => model.Matricula, "", new { @class = "text-danger small", role = "alert" })
+            </div>
+            <div class="col-md-6">
+                @Html.LabelFor(model => model.ModeloAeronaveId, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
+                @Html.DropDownList("ModeloAeronaveId", null, "Seleccione…", htmlAttributes: new { @class = "form-select" })
+                @Html.ValidationMessageFor(model => model.ModeloAeronaveId, "", new { @class = "text-danger small", role = "alert" })
+            </div>
+            <div class="col-md-6">
+                @Html.LabelFor(model => model.EstadoAeronaveCodigo, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
+                @Html.DropDownList("EstadoAeronaveCodigo", null, "Seleccione…", htmlAttributes: new { @class = "form-select" })
+                @Html.ValidationMessageFor(model => model.EstadoAeronaveCodigo, "", new { @class = "text-danger small", role = "alert" })
+            </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary" data-texto-carga="Guardando…">Guardar</button>
+        @Html.ActionLink("Cancelar", "Index", null, new { @class = "btn btn-outline-secondary" })
+    </div>
+}
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

@@ -1,0 +1,56 @@
+﻿@model IEnumerable<AerolineaVIP.Models.Dominio.Frecuencia>
+@{
+    ViewBag.Title = "Frecuencias aprobadas";
+}
+<nav aria-label="Ruta de navegación"><ol class="breadcrumb">
+    <li class="breadcrumb-item">@Html.ActionLink("Administración", "Index", "Admin")</li>
+    <li class="breadcrumb-item">@Html.ActionLink("Mantenimientos", "Mantenimientos", "Admin")</li>
+    <li class="breadcrumb-item active" aria-current="page">Frecuencias aprobadas</li>
+</ol></nav>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <h1 class="h3 mb-0">Frecuencias aprobadas</h1>
+    @if (User.IsInRole(AerolineaVIP.RolesApp.SuperUsuario))
+    {
+        @Html.ActionLink("Crear nuevo", "Create", null, new { @class = "btn btn-primary" })
+    }
+</div>
+@if (ViewBag.Nota != null)
+{
+    <p class="text-muted small">@ViewBag.Nota</p>
+}
+@if (!Model.Any())
+{
+    <div class="alert alert-info" role="status">No se encontraron registros.</div>
+}
+else
+{
+    <div class="table-responsive tarjeta p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th scope="col">@Html.DisplayNameFor(model => model.RutaId)</th>
+                <th scope="col">@Html.DisplayNameFor(model => model.DiaSemana)</th>
+                <th scope="col">@Html.DisplayNameFor(model => model.HoraSalida)</th>
+                <th scope="col">@Html.DisplayNameFor(model => model.Activa)</th>
+                <th scope="col" class="text-end">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+@foreach (var item in Model)
+{
+            <tr>
+                <td>@(item.Ruta.AeropuertoOrigen.CodigoIATA + " → " + item.Ruta.AeropuertoDestino.CodigoIATA)</td>
+                <td>@(AerolineaVIP.Servicios.Formato.NombreDia(item.DiaSemana))</td>
+                <td>@(AerolineaVIP.Servicios.Formato.Horario(item.HoraSalida, item.HoraLlegada))</td>
+                <td>@(item.Activa ? "Sí" : "No")</td>
+                <td class="text-end text-nowrap">
+                    @if (User.IsInRole(AerolineaVIP.RolesApp.SuperUsuario)) { @Html.ActionLink("Editar", "Edit", new { id = item.FrecuenciaId }, new { @class = "btn btn-sm btn-outline-primary" }) }
+                    @Html.ActionLink("Detalles", "Details", new { id = item.FrecuenciaId }, new { @class = "btn btn-sm btn-outline-secondary" })
+                    @if (User.IsInRole(AerolineaVIP.RolesApp.SuperUsuario)) { @Html.ActionLink("Eliminar", "Delete", new { id = item.FrecuenciaId }, new { @class = "btn btn-sm btn-outline-danger" }) }
+                </td>
+            </tr>
+}
+            </tbody>
+        </table>
+    </div>
+}

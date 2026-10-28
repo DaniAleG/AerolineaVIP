@@ -1,0 +1,41 @@
+﻿@model AerolineaVIP.Models.Dominio.TramoItinerario
+@{
+    ViewBag.Title = "Nuevo registro: tramo";
+}
+<nav aria-label="Ruta de navegación"><ol class="breadcrumb">
+    <li class="breadcrumb-item">@Html.ActionLink("Administración", "Index", "Admin")</li>
+    <li class="breadcrumb-item">@Html.ActionLink("Tramos de itinerario", "Index")</li>
+    <li class="breadcrumb-item active" aria-current="page">Crear</li>
+</ol></nav>
+<h1 class="h3">Nuevo registro: tramo</h1>
+<p class="text-muted small">Los campos marcados con <span class="req">*</span> son obligatorios.</p>
+@using (Html.BeginForm("Create", "TramosItinerario", null, FormMethod.Post, new { @class = "tarjeta js-form-carga", novalidate = "novalidate" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+    <div class="row g-3">
+            <div class="col-md-6">
+                @Html.LabelFor(model => model.ItinerarioId, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
+                @Html.DropDownList("ItinerarioId", null, "Seleccione…", htmlAttributes: new { @class = "form-select" })
+                @Html.ValidationMessageFor(model => model.ItinerarioId, "", new { @class = "text-danger small", role = "alert" })
+            </div>
+            <div class="col-md-6">
+                @Html.LabelFor(model => model.VueloId, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
+                @Html.DropDownList("VueloId", null, "Seleccione…", htmlAttributes: new { @class = "form-select" })
+                @Html.ValidationMessageFor(model => model.VueloId, "", new { @class = "text-danger small", role = "alert" })
+            </div>
+            <div class="col-md-6">
+                @Html.LabelFor(model => model.Orden, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
+                @Html.EditorFor(model => model.Orden, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Orden, "", new { @class = "text-danger small", role = "alert" })
+            </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary" data-texto-carga="Guardando…">Guardar</button>
+        @Html.ActionLink("Cancelar", "Index", null, new { @class = "btn btn-outline-secondary" })
+    </div>
+}
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

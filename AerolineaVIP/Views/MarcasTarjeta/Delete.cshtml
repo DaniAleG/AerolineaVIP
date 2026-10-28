@@ -1,0 +1,44 @@
+﻿@model AerolineaVIP.Models.Dominio.MarcaTarjeta
+@{
+    ViewBag.Title = "Eliminar marca de tarjeta";
+}
+<nav aria-label="Ruta de navegación"><ol class="breadcrumb">
+    <li class="breadcrumb-item">@Html.ActionLink("Administración", "Index", "Admin")</li>
+    <li class="breadcrumb-item">@Html.ActionLink("Marcas de tarjeta (simulación)", "Index")</li>
+    <li class="breadcrumb-item active" aria-current="page">Eliminar</li>
+</ol></nav>
+<h1 class="h3">Eliminar marca de tarjeta</h1>
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger" role="alert"><strong>Error:</strong> @ViewBag.Error</div>
+}
+else
+{
+    <div class="alert alert-warning" role="alert"><strong>Advertencia:</strong> ¿Está seguro de que desea eliminar este registro? Esta acción no se puede deshacer.</div>
+}
+<div class="tarjeta">
+    <dl class="row mb-0">
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Codigo)</dt>
+        <dd class="col-sm-8">@(Model.Codigo)</dd>
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Nombre)</dt>
+        <dd class="col-sm-8">@(Model.Nombre)</dd>
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LongitudNumero)</dt>
+        <dd class="col-sm-8">@(Model.LongitudNumero)</dd>
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LongitudCodigoSeguridad)</dt>
+        <dd class="col-sm-8">@(Model.LongitudCodigoSeguridad)</dd>
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.PrefijosReferencia)</dt>
+        <dd class="col-sm-8">@(Model.PrefijosReferencia)</dd>
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.RutaLogo)</dt>
+        <dd class="col-sm-8"><img src="@Url.Content(Model.RutaLogo)" alt="" class="logo-tarjeta-mini" onerror="this.style.display='none'" /></dd>
+        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Activa)</dt>
+        <dd class="col-sm-8">@(Model.Activa ? "Sí" : "No")</dd>
+    </dl>
+</div>
+@using (Html.BeginForm("Delete", "MarcasTarjeta", new { id = Model.Codigo }, FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        @Html.ActionLink("Cancelar", "Index", null, new { @class = "btn btn-outline-secondary" })
+    </div>
+}
