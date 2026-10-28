@@ -5,10 +5,7 @@ using AerolineaVIP.Servicios;
 
 namespace AerolineaVIP.Controllers
 {
-    /// <summary>
-    /// Pantalla 16. Comprobantes ACADÉMICOS: listado, vista previa e impresión, y PDF
-    /// generado en la aplicación con los datos persistidos (vw_ComprobanteDetalle).
-    /// </summary>
+    /// <summary>Pantalla 16: comprobantes, vista previa y PDF.</summary>
     [Authorize(Roles = RolesApp.Todos)]
     public class ComprobantesController : ControladorBase
     {

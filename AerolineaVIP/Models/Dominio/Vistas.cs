@@ -1,7 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Vistas de SQL Server mapeadas como entidades de solo lectura (sección A6 del
-// script). Nunca se insertan ni actualizan desde la aplicación.
-// -----------------------------------------------------------------------------
+﻿// Vistas de SQL Server (solo lectura).
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -72,10 +69,7 @@ namespace AerolineaVIP.Models.Dominio
         public string Ubicacion { get; set; }
     }
 
-    /// <summary>
-    /// Estado visual de cada asiento por vuelo: DISPONIBLE (verde), RESERVADO (morado)
-    /// u OCUPADO (rojo). Solo incluye vuelos con aeronave asignada (RNP-01).
-    /// </summary>
+    /// <summary>Estado de cada asiento por vuelo (verde, morado o rojo).</summary>
     [Table("vw_EstadoAsientoVuelo")]
     public partial class vw_EstadoAsientoVuelo
     {

@@ -1,11 +1,4 @@
-﻿/* =========================================================================
-   Pantalla 11 · Pago SIMULADO.
-   - Solo números en número, vencimiento y código (keypress/input).
-   - maxlength dinámico según la marca (LongitudNumero / LongitudCodigoSeguridad).
-   - Vencimiento MM/AA no pasado.
-   - "Pagar" valida y abre el modal; el POST real sale solo desde el botón
-     «Pagar» del modal. «Cancelar» cierra el modal sin registrar ningún pago.
-   ========================================================================= */
+﻿// Pantalla 11: validaciones del formulario de pago y modal de confirmación.
 (function ($) {
     'use strict';
     var $form = $('#formPago');

@@ -23,7 +23,7 @@ namespace AerolineaVIP.Controllers
             vm.DiasOperacion = Servicio.PanelDiasOperacion();
         }
 
-        // ===================== Pantalla 5: búsqueda =====================
+        // ----- Pantalla 5: búsqueda -----
         public ActionResult Buscar(string origen, string destino, DateTime? fecha, int? pasajeros)
         {
             var vm = new BusquedaVM
@@ -46,7 +46,7 @@ namespace AerolineaVIP.Controllers
             return Json(lista, JsonRequestBehavior.AllowGet);
         }
 
-        // ===================== Pantalla 6: resultados =====================
+        // ----- Pantalla 6: resultados -----
         public ActionResult Resultados(BusquedaVM busqueda)
         {
             // Validación en el servidor de los criterios recibidos por GET.
@@ -69,7 +69,7 @@ namespace AerolineaVIP.Controllers
             return View(vm);
         }
 
-        // ===================== Pantalla 7: disponibilidad de asientos =====================
+        // ----- Pantalla 7: disponibilidad de asientos -----
         public ActionResult Disponibilidad(int? id, int? pasajeros, string vuelos)
         {
             if (!id.HasValue) return RedirectToAction("Buscar");

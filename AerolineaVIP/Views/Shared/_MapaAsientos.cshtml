@@ -1,12 +1,5 @@
 ﻿@model MapaAsientosVM
-@*
-    Mapa del Embraer Phenom 300E generado en Razor recorriendo los asientos del
-    ViewModel. Cada asiento lleva data-numero, data-codigo y data-estado; la clase
-    de color (asiento-disponible / asiento-reservado / asiento-ocupado) sale del
-    EstadoVisual que entrega vw_EstadoAsientoVuelo, no se fija en el HTML.
-    Posiciones: --c/--r en escritorio (proa a la izquierda) y --mc/--mr en móvil
-    (proa arriba).
-*@
+@* Mapa de asientos del Phenom 300E. El color sale del estado que envía el servidor. *@
 @functions {
     private static int ColumnaEscritorio(int fila) { return fila == 1 ? 2 : fila == 2 ? 3 : fila == 3 ? 5 : 6; }
     private static int FilaMovil(int fila) { return fila == 1 ? 2 : fila == 2 ? 3 : fila == 3 ? 5 : 6; }

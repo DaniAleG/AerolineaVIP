@@ -2,7 +2,7 @@
 @{
     ViewBag.Title = Model.EsPersonal ? "Consulta de reservas" : "Mis reservas";
 }
-@* Pantalla 13. Consulta de reservas: el cliente ve solo las propias; el personal autorizado consulta todas. *@
+@* Pantalla 13. Consulta de reservas. *@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
     <h1 class="h3 mb-0">@ViewBag.Title</h1>
     <a class="btn btn-primary" href="@Url.Action("Buscar", "Vuelos")">Buscar vuelos</a>

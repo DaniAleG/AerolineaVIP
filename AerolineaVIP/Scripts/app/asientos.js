@@ -1,11 +1,4 @@
-﻿/* =========================================================================
-   Mapa de asientos (pantallas 7 y 8).
-   - Los colores vienen del servidor (vw_EstadoAsientoVuelo).
-   - Solo los asientos verdes son seleccionables; rojos y morados están
-     deshabilitados (disabled + aria-disabled).
-   - La selección es TEMPORAL y se guarda en campos ocultos asiento_{p}_{t};
-     el servidor la revalida al continuar y al confirmar (RNP-04).
-   ========================================================================= */
+﻿// Mapa de asientos (pantallas 7 y 8). Solo los verdes se pueden elegir.
 (function ($) {
     'use strict';
 
@@ -114,7 +107,7 @@
         var n = parseInt($s.data('numero'), 10);
         tramoActivo = t;
 
-        // ¿Ya lo tiene otro pasajero en este tramo? Se lo quita (un asiento por pasajero y tramo).
+        // ¿Ya lo tiene otro pasajero en este tramo? Se lo quita.
         for (var p = 0; p < pasajeros; p++) {
             if (parseInt(campo(p, t).val(), 10) === n) {
                 campo(p, t).val('0');

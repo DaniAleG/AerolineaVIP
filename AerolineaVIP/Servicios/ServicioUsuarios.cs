@@ -4,10 +4,7 @@ using AerolineaVIP.Models;
 
 namespace AerolineaVIP.Servicios
 {
-    /// <summary>
-    /// Consulta de usuarios de la base AerolineaVIP_Identity. Reserva.UsuarioId no puede
-    /// tener FK física (otra base), así que la aplicación valida y resuelve los datos aquí.
-    /// </summary>
+    /// <summary>Consulta usuarios de la base de Identity.</summary>
     public static class ServicioUsuarios
     {
         public class DatosUsuario
@@ -57,7 +54,7 @@ namespace AerolineaVIP.Servicios
             }
         }
 
-        /// <summary>Busca un CLIENTE por nombre de usuario o correo (asistencia de counter).</summary>
+        /// <summary>Busca un cliente por nombre de usuario o correo (asistencia de counter).</summary>
         public static ApplicationUser BuscarCliente(string usuarioOCorreo)
         {
             if (string.IsNullOrWhiteSpace(usuarioOCorreo)) return null;

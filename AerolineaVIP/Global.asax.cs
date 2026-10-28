@@ -21,8 +21,7 @@ namespace AerolineaVIP
             ModelBinders.Binders.Add(typeof(decimal?), new DecimalModelBinder());
             MvcHandler.DisableMvcResponseHeader = true;
 
-            // Creación por CÓDIGO de roles, superusuario, administrador y usuarios
-            // iniciales, con la asignación de sus roles (ASP.NET Identity).
+            // Crea roles y usuarios iniciales.
             InicializadorIdentity.Inicializar();
         }
     }

@@ -1,11 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Validaciones centralizadas del modelo (RN-10 y apartado 11.1.4 del enunciado).
-// Cada entidad se completa con una clase parcial asociada a una clase de
-// metadatos ([MetadataType]). Las vistas Razor generan con estas reglas los
-// atributos data-val-* que usa jQuery Validation (cliente) y el servidor las
-// vuelve a comprobar con ModelState.IsValid. Las reglas que dependen de varias
-// entidades o de la disponibilidad se validan en los servicios y en SQL Server.
-// -----------------------------------------------------------------------------
+﻿// Validaciones de las entidades con [MetadataType].
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -20,7 +13,7 @@ namespace AerolineaVIP.Models.Dominio
         public const string MsgRequerido = "El campo {0} es obligatorio.";
     }
 
-    // ===================== Catálogos =====================
+    // ----- Catálogos -----
     [MetadataType(typeof(CatalogoMetadata))] public partial class TipoDocumentoIdentidad { }
     [MetadataType(typeof(CatalogoMetadata))] public partial class EstadoAeronave { }
     [MetadataType(typeof(CatalogoMetadata))] public partial class EstadoVuelo { }
@@ -157,7 +150,7 @@ namespace AerolineaVIP.Models.Dominio
         public string LeyendaComprobante { get; set; }
     }
 
-    // ===================== Operación aérea =====================
+    // ----- Operación aérea -----
     [MetadataType(typeof(AeropuertoMetadata))]
     public partial class Aeropuerto { }
     public class AeropuertoMetadata
@@ -374,7 +367,7 @@ namespace AerolineaVIP.Models.Dominio
         public byte Orden { get; set; }
     }
 
-    // ===================== Transacciones =====================
+    // ----- Transacciones -----
     [MetadataType(typeof(PasajeroMetadata))]
     public partial class Pasajero : IValidatableObject
     {

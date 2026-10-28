@@ -34,7 +34,7 @@ namespace AerolineaVIP.Controllers
             get { return HttpContext.GetOwinContext().Authentication; }
         }
 
-        // ===================== Pantalla 2: inicio de sesión =====================
+        // ----- Pantalla 2: inicio de sesión -----
         [AllowAnonymous]
         public ActionResult Login(string returnUrl, bool expirada = false)
         {
@@ -99,7 +99,7 @@ namespace AerolineaVIP.Controllers
             return RedirectToAction("MisReservas", "Reservas");
         }
 
-        // ===================== Pantalla 3: registro =====================
+        // ----- Pantalla 3: registro -----
         private bool EsSuperUsuario { get { return User.Identity.IsAuthenticated && User.IsInRole(RolesApp.SuperUsuario); } }
 
         private void PrepararRoles(RegisterViewModel model)
@@ -127,8 +127,7 @@ namespace AerolineaVIP.Controllers
         {
             if (User.Identity.IsAuthenticated && !EsSuperUsuario) return RedirectToAction("Index", "Home");
 
-            // SEGURIDAD: el rol enviado por el navegador se ignora si quien registra no es
-            // SuperUsuario. Un visitante SIEMPRE queda como Cliente.
+            // Solo el SuperUsuario puede elegir rol; los demás quedan como Cliente.
             var rol = EsSuperUsuario && RolesApp.Lista.Contains(model.Rol) ? model.Rol : RolesApp.Cliente;
             model.Rol = rol;
             ModelState.Remove("Rol");
@@ -180,7 +179,7 @@ namespace AerolineaVIP.Controllers
             return error;
         }
 
-        // ===================== Pantalla 4: recuperación de acceso =====================
+        // ----- Pantalla 4: recuperación de acceso -----
         [AllowAnonymous]
         public ActionResult ForgotPassword()
         {
@@ -247,7 +246,7 @@ namespace AerolineaVIP.Controllers
             return View();
         }
 
-        // ===================== Cerrar sesión =====================
+        // ----- Cerrar sesión -----
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult LogOff()

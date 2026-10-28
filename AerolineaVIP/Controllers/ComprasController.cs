@@ -33,7 +33,7 @@ namespace AerolineaVIP.Controllers
             return r != null && (r.UsuarioId == UsuarioId || User.IsInRole(RolesApp.Counter) || User.IsInRole(RolesApp.SuperUsuario));
         }
 
-        // ===================== Pantalla 11 =====================
+        // ----- Pantalla 11 -----
         public ActionResult Pagar(int? id)
         {
             if (!id.HasValue) return RedirectToAction("MisReservas", "Reservas");
@@ -129,7 +129,7 @@ namespace AerolineaVIP.Controllers
             return View(model);
         }
 
-        // ===================== Pantalla 12 =====================
+        // ----- Pantalla 12 -----
         public ActionResult Confirmacion(int? id)
         {
             if (!id.HasValue) return RedirectToAction("MisReservas", "Reservas");

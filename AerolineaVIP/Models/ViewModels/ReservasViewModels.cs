@@ -7,10 +7,7 @@ using AerolineaVIP.Models.Dominio;
 
 namespace AerolineaVIP.Models.ViewModels
 {
-    /// <summary>
-    /// Operación en curso (pantallas 8 a 10). Se conserva en la sesión del servidor:
-    /// es una selección TEMPORAL que no ocupa inventario hasta confirmar la reserva.
-    /// </summary>
+    /// <summary>Reserva en curso (pantallas 8 a 10), guardada en sesión.</summary>
     [Serializable]
     public class ReservaEnCurso
     {
@@ -19,7 +16,7 @@ namespace AerolineaVIP.Models.ViewModels
         /// <summary>Asientos[pasajero][tramo] = NumeroAsiento (0 = sin asignar).</summary>
         public List<List<byte>> Asientos { get; set; }
         public List<PasajeroFormVM> Datos { get; set; }
-        /// <summary>Clave para evitar reservas duplicadas por doble envío (RNP-10).</summary>
+        /// <summary>Clave para evitar reservas duplicadas por doble envío.</summary>
         public Guid Token { get; set; }
 
         public ReservaEnCurso()
@@ -194,7 +191,7 @@ namespace AerolineaVIP.Models.ViewModels
         public string Accion { get; set; }
     }
 
-    // ===================== Consulta y gestión (13 y 14) =====================
+    // ----- Consulta y gestión (13 y 14) -----
     public class FilaReservaVM
     {
         public int ReservaId { get; set; }

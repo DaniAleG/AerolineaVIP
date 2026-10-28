@@ -1,8 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Lógica de negocio de vuelos y reservas. Las reglas se validan aquí (servidor)
-// y la base de datos las vuelve a garantizar con CHECK, índices únicos y
-// triggers (RN-03, RNP-01, RNP-03, RNP-04, RNP-07, RNP-10).
-// -----------------------------------------------------------------------------
+﻿// Lógica de vuelos y reservas.
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -26,12 +22,7 @@ namespace AerolineaVIP.Servicios
             this.db = db;
         }
 
-        // =====================================================================
-        // DP-07: expiración de reservas pendientes (sin procesos en segundo plano).
-        // Se ejecuta al consultar disponibilidad, reservas o pagos: las reservas
-        // PENDIENTES cuya FechaExpiracion ya pasó cambian a EXPIRADA, sus asientos
-        // a LIBERADA (vuelven a verde) y su compra pendiente a ANULADA.
-        // =====================================================================
+        // Expira las reservas pendientes vencidas y libera sus asientos (DP-07).
         private static DateTime ultimaExpiracion = DateTime.MinValue;
         private static readonly object candado = new object();
 
@@ -60,9 +51,7 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
                 new SqlParameter("@ahora", Politicas.Ahora));
         }
 
-        // =====================================================================
-        // Consulta de vuelos
-        // =====================================================================
+        // ----- Consulta de vuelos -----
         public vw_VueloDetalle Vuelo(int vueloId)
         {
             return db.vw_VueloDetalle.AsNoTracking().FirstOrDefault(v => v.VueloId == vueloId);
@@ -134,9 +123,7 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
                 }).ToList();
         }
 
-        /// <summary>
-        /// Devuelve null si el vuelo puede comercializarse para N pasajeros, o el motivo.
-        /// </summary>
+        /// <summary>Devuelve null si el vuelo se puede vender, o el motivo si no.</summary>
         public string MotivoNoComercializable(vw_VueloDetalle v, bool tieneAeronave, int disponibles, int pasajeros)
         {
             if (v.EstadoVueloCodigo == "CANCELADO") return "Vuelo cancelado: se muestra solo como información.";
@@ -172,7 +159,7 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
             return r;
         }
 
-        /// <summary>Pantalla 6: vuelos directos e itinerarios con una escala (Galápagos vía Guayaquil).</summary>
+        /// <summary>Pantalla 6: vuelos directos y con escala.</summary>
         public ResultadosVM Buscar(BusquedaVM b)
         {
             ExpirarVencidas();
@@ -280,7 +267,7 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
             return fechas.Distinct().OrderBy(f => f).Take(6).ToList();
         }
 
-        /// <summary>Destinos alcanzables desde un origen (directos o con una escala), para el selector dependiente.</summary>
+        /// <summary>Destinos posibles desde un origen.</summary>
         public List<Aeropuerto> DestinosDesde(string origen)
         {
             var codigos = new HashSet<string>();
@@ -335,15 +322,9 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
             return lista.OrderBy(l => l.Nombre).ToList();
         }
 
-        // =====================================================================
-        // Selección temporal (pantalla 8) y creación de la reserva (pantalla 10)
-        // =====================================================================
+        // ----- Selección de asientos y creación de la reserva -----
 
-        /// <summary>
-        /// Comprueba en el servidor la selección temporal (RNP-04): vuelos comercializables,
-        /// asientos existentes y disponibles, un asiento por pasajero y tramo.
-        /// Devuelve la lista de errores (vacía si todo es válido).
-        /// </summary>
+        /// <summary>Vuelve a validar la selección de asientos. Devuelve la lista de errores.</summary>
         public List<string> ValidarSeleccion(ReservaEnCurso op)
         {
             var errores = new List<string>();
@@ -443,10 +424,7 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
             return porRetencion < porSalida ? porRetencion : porSalida;
         }
 
-        /// <summary>
-        /// Registra la reserva PENDIENTE y sus asignaciones en una sola transacción. Si un
-        /// asiento falla (índice único UX_RPV_AsientoActivo o trigger), no se guarda nada.
-        /// </summary>
+        /// <summary>Guarda la reserva y sus asientos en una transacción.</summary>
         public Reserva CrearReserva(ReservaEnCurso op, string usuarioId, out List<string> errores)
         {
             ExpirarVencidas(true);
@@ -555,9 +533,7 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
             return nuevo;
         }
 
-        // =====================================================================
-        // Detalle de una reserva (pantallas 11, 12, 14)
-        // =====================================================================
+        // ----- Detalle de una reserva -----
         public Reserva CargarReserva(int reservaId)
         {
             return db.Reserva
@@ -632,14 +608,9 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
             return vm;
         }
 
-        // =====================================================================
-        // DP-08: cancelación
-        // =====================================================================
+        // ----- Cancelación (DP-08) -----
 
-        /// <summary>
-        /// Evalúa si la reserva puede cancelarse. esAdministracion = SuperUsuario o Administrador
-        /// (excepción autorizada dentro de las 48 h previas).
-        /// </summary>
+        /// <summary>Indica si la reserva se puede cancelar.</summary>
         public void EvaluarCancelacion(DetalleReservaVM vm, bool esAdministracion)
         {
             var r = vm.Reserva;
@@ -649,11 +620,11 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
             var primeraSalida = vigentes.Any() ? vigentes.Min(l => l.SalidaProgramada) : (DateTime?)null;
 
             vm.CondicionesCancelacion = r.EstadoReservaCodigo == "CONFIRMADA"
-                ? "Política propuesta (DP-08, pendiente de aprobación): una reserva pagada puede cancelarse en línea hasta " + horas
+                ? "Política de cancelación (DP-08): una reserva pagada puede cancelarse en línea hasta " + horas
                   + " horas antes de la primera salida y siempre que ningún pasajero haya hecho check-in. La cancelación libera los asientos, anula la compra, "
                   + "registra el reverso SIMULADO del pago y emite una nota de crédito académica. Dentro de las " + horas
-                  + " horas solo el personal administrativo puede cancelar (excepción autorizada). Las penalizaciones y reembolsos reales están pendientes de aprobación."
-                : "Política propuesta (DP-08, pendiente de aprobación): una reserva pendiente de pago puede cancelarse sin costo mientras no haya expirado. Los asientos vuelven a estar disponibles de inmediato.";
+                  + " horas solo el personal administrativo puede cancelar (excepción autorizada). No se aplican penalizaciones; el reembolso es simulado."
+                : "Política de cancelación (DP-08): una reserva pendiente de pago puede cancelarse sin costo mientras no haya expirado. Los asientos vuelven a estar disponibles de inmediato.";
 
             if (r.EstadoReservaCodigo == "CANCELADA" || r.EstadoReservaCodigo == "EXPIRADA")
             {
@@ -687,7 +658,7 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
             vm.PuedeCancelar = true;
         }
 
-        /// <summary>Ejecuta la cancelación autorizada en una sola transacción (RNP-07).</summary>
+        /// <summary>Ejecuta la cancelación autorizada en una sola transacción.</summary>
         public string Cancelar(int reservaId, string motivo, bool esAdministracion)
         {
             ExpirarVencidas(true);

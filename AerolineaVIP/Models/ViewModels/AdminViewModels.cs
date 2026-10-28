@@ -6,7 +6,7 @@ using AerolineaVIP.Models.Dominio;
 
 namespace AerolineaVIP.Models.ViewModels
 {
-    // ===================== Pantalla 18 =====================
+    // ----- Pantalla 18 -----
     public class FilaVueloAdminVM
     {
         public vw_VueloDetalle Vuelo { get; set; }
@@ -88,7 +88,7 @@ namespace AerolineaVIP.Models.ViewModels
         }
     }
 
-    // ===================== Pantalla 19 =====================
+    // ----- Pantalla 19 -----
     public class FilaAeronaveVM
     {
         public Aeronave Aeronave { get; set; }
@@ -127,7 +127,7 @@ namespace AerolineaVIP.Models.ViewModels
         public IEnumerable<SelectListItem> Estados { get; set; }
     }
 
-    // ===================== Pantalla 20 =====================
+    // ----- Pantalla 20 -----
     public class FilaUsuarioVM
     {
         public string Id { get; set; }
@@ -195,7 +195,7 @@ namespace AerolineaVIP.Models.ViewModels
         public bool PuedeVerUsuarios { get; set; }
     }
 
-    // ===================== Pantalla 21 =====================
+    // ----- Pantalla 21 -----
     public class ReportesVM : IValidatableObject
     {
         [Display(Name = "Consulta")]

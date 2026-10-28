@@ -4,10 +4,7 @@ using System.Web.Mvc;
 
 namespace AerolineaVIP.Infraestructura
 {
-    /// <summary>
-    /// Enlaza importes decimales aceptando coma o punto como separador decimal
-    /// (la cultura es-EC usa coma; el navegador puede enviar punto).
-    /// </summary>
+    /// <summary>Acepta coma o punto como separador decimal.</summary>
     public class DecimalModelBinder : IModelBinder
     {
         public object BindModel(ControllerContext controllerContext, ModelBindingContext bindingContext)

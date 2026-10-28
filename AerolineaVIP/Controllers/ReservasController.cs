@@ -8,11 +8,7 @@ using AerolineaVIP.Servicios;
 
 namespace AerolineaVIP.Controllers
 {
-    /// <summary>
-    /// Pantallas 8 (asientos), 9 (pasajeros), 10 (reserva), 13 (consulta) y 14 (gestión).
-    /// La selección de asientos es TEMPORAL (sesión del servidor) y se revalida al
-    /// continuar y al confirmar (RNP-04); no hay bloqueos en esta entrega.
-    /// </summary>
+    /// <summary>Pantallas 8, 9, 10, 13 y 14. La selección se guarda en sesión hasta confirmar.</summary>
     [Authorize]
     public class ReservasController : ControladorBase
     {
@@ -52,7 +48,7 @@ namespace AerolineaVIP.Controllers
             return vm;
         }
 
-        // ===================== Pantalla 8: selección de vuelo y asiento =====================
+        // ----- Pantalla 8: selección de vuelo y asiento -----
         [Authorize(Roles = RolesApp.Operadores)]
         public ActionResult SeleccionAsiento(int? id, string vuelos, int? pasajeros)
         {
@@ -118,7 +114,7 @@ namespace AerolineaVIP.Controllers
                 op.Asientos.Add(fila);
             }
 
-            // Validación en el servidor (RNP-04): disponibilidad real en este momento.
+            // Validación en el servidor: disponibilidad real en este momento.
             Reservas.ExpirarVencidas(true);
             var errores = Reservas.ValidarSeleccion(op);
             if (errores.Any())
@@ -142,7 +138,7 @@ namespace AerolineaVIP.Controllers
             return RedirectToAction("Pasajeros");
         }
 
-        // ===================== Pantalla 9: datos de los pasajeros =====================
+        // ----- Pantalla 9: datos de los pasajeros -----
         private IEnumerable<SelectListItem> TiposDocumento(string seleccionado = null)
         {
             return new SelectList(db.TipoDocumentoIdentidad.OrderBy(t => t.Descripcion).ToList(), "Codigo", "Descripcion", seleccionado);
@@ -221,7 +217,7 @@ namespace AerolineaVIP.Controllers
             return RedirectToAction("Confirmar");
         }
 
-        // ===================== Pantalla 10: reserva de pasajes =====================
+        // ----- Pantalla 10: reserva de pasajes -----
         private ConfirmarReservaVM ConstruirConfirmacion(ReservaEnCurso op)
         {
             var resumen = Reservas.Resumen(op);
@@ -254,7 +250,7 @@ namespace AerolineaVIP.Controllers
         [Authorize(Roles = RolesApp.Operadores)]
         public ActionResult Confirmar(ConfirmarReservaVM model, Guid? token)
         {
-            // RNP-10: un doble envío del mismo formulario no crea una segunda reserva.
+            // Un doble envío del mismo formulario no crea una segunda reserva.
             if (token.HasValue && Session["ReservaToken:" + token.Value] is int)
             {
                 var existente = (int)Session["ReservaToken:" + token.Value];
@@ -291,7 +287,7 @@ namespace AerolineaVIP.Controllers
             var reserva = Reservas.CrearReserva(op, titularId, out errores);
             if (reserva == null)
             {
-                // Si la revalidación de asientos falla se vuelve a la pantalla 8 (RNP-04).
+                // Si la revalidación de asientos falla se vuelve a la pantalla 8.
                 if (errores.Any(e => e.Contains("asiento") || e.Contains("Asiento")))
                 {
                     Error(string.Join(" ", errores));
@@ -314,7 +310,7 @@ namespace AerolineaVIP.Controllers
             return RedirectToAction("Confirmacion", "Compras", new { id = reserva.ReservaId });
         }
 
-        // ===================== Pantalla 13: consulta de reservas =====================
+        // ----- Pantalla 13: consulta de reservas -----
         public ActionResult MisReservas(MisReservasVM filtros)
         {
             Reservas.ExpirarVencidas();
@@ -331,8 +327,7 @@ namespace AerolineaVIP.Controllers
                 .Include(r => r.Asignaciones)
                 .Include(r => r.Compras);
 
-            // Filtro SIEMPRE por el usuario autenticado (no por un parámetro de la URL),
-            // salvo para el personal autorizado.
+            // El cliente solo ve sus propias reservas.
             if (!EsPersonal)
             {
                 var id = UsuarioId;
@@ -394,7 +389,7 @@ namespace AerolineaVIP.Controllers
             return primero.CiudadOrigen + " → " + ultimo.CiudadDestino;
         }
 
-        // ===================== Pantalla 14: gestión y cancelación =====================
+        // ----- Pantalla 14: gestión y cancelación -----
         public ActionResult Gestionar(int? id)
         {
             if (!id.HasValue) return RedirectToAction("MisReservas");
@@ -416,7 +411,7 @@ namespace AerolineaVIP.Controllers
         {
             var r = db.Reserva.AsNoTracking().FirstOrDefault(x => x.ReservaId == id);
             if (r == null || !PuedeAcceder(r)) return AccesoDenegado();
-            // El empleado de counter consulta y asiste, pero no cancela reservas ajenas pagadas sin autorización (DP-13).
+            // El counter no cancela reservas pagadas (DP-13).
             if (motivo != null && motivo.Length > 300) motivo = motivo.Substring(0, 300);
 
             var error = Reservas.Cancelar(id, motivo, EsAdministracion);

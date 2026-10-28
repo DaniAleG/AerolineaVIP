@@ -1,7 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Entidades transaccionales: pasajeros, reservas, asignaciones de asiento,
-// compras, pagos simulados, check-in y comprobantes académicos (A4 y A5).
-// -----------------------------------------------------------------------------
+﻿// Pasajeros, reservas, compras, pagos, check-in y comprobantes.
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -41,10 +38,7 @@ namespace AerolineaVIP.Models.Dominio
         public string NombreCompleto { get { return (Nombres + " " + Apellidos).Trim(); } }
     }
 
-    /// <summary>
-    /// Reserva. UsuarioId = Id de AspNetUsers en AerolineaVIP_Identity (sin FK física
-    /// porque está en otra base; la aplicación valida que el usuario exista).
-    /// </summary>
+    /// <summary>Reserva. UsuarioId es el Id del usuario en la base de Identity.</summary>
     [Table("Reserva")]
     public partial class Reserva
     {
@@ -121,7 +115,7 @@ namespace AerolineaVIP.Models.Dominio
         public string MonedaCodigo { get; set; }
         [Column(TypeName = "varchar")]
         public string EstadoCompraCodigo { get; set; }
-        /// <summary>Evita compras duplicadas por solicitudes repetidas (RNP-10).</summary>
+        /// <summary>Evita compras duplicadas por solicitudes repetidas.</summary>
         public Guid ClaveIdempotencia { get; set; }
 
         public virtual Reserva Reserva { get; set; }
@@ -131,10 +125,7 @@ namespace AerolineaVIP.Models.Dominio
         public virtual ICollection<Comprobante> Comprobantes { get; set; }
     }
 
-    /// <summary>
-    /// Pago SIMULADO. Nunca se guarda el número completo, el código de seguridad ni la
-    /// fecha de vencimiento de la tarjeta.
-    /// </summary>
+    /// <summary>Pago simulado. No se guarda el número completo de la tarjeta.</summary>
     [Table("Pago")]
     public partial class Pago
     {
@@ -179,7 +170,7 @@ namespace AerolineaVIP.Models.Dominio
         public virtual EstadoCheckIn EstadoCheckIn { get; set; }
     }
 
-    /// <summary>Comprobante ACADÉMICO (no tributario).</summary>
+    /// <summary>Comprobante académico (no tributario).</summary>
     [Table("Comprobante")]
     public partial class Comprobante
     {

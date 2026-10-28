@@ -2,9 +2,9 @@
 @{
     ViewBag.Title = "Check-in";
 }
-@* Pantalla 15. Check-in web (política propuesta DP-12, parametrizable). *@
+@* Pantalla 15. Check-in web. *@
 <h1 class="h3">Check-in</h1>
-<p class="text-muted small">Política propuesta (DP-12, pendiente de aprobación): el check-in web abre @Model.HorasApertura horas antes de la salida y cierra @Model.HorasCierre hora(s) antes. Solo para reservas pagadas.</p>
+<p class="text-muted small">Política de check-in (DP-12): el check-in web abre @Model.HorasApertura horas antes de la salida y cierra @Model.HorasCierre hora(s) antes. Solo para reservas pagadas.</p>
 
 @using (Html.BeginForm("Index", "CheckIn", FormMethod.Post, new { id = "formCheckIn", novalidate = "novalidate" }))
 {

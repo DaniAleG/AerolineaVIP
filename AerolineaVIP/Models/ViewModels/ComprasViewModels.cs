@@ -5,15 +5,12 @@ using AerolineaVIP.Models.Dominio;
 
 namespace AerolineaVIP.Models.ViewModels
 {
-    /// <summary>
-    /// Pantalla 11. Pago SIMULADO: el número completo, el vencimiento y el código de
-    /// seguridad solo se validan en memoria; nunca se guardan.
-    /// </summary>
+    /// <summary>Pantalla 11: datos de la tarjeta (no se guardan completos).</summary>
     public class PagoVM
     {
         public int ReservaId { get; set; }
 
-        /// <summary>Clave de idempotencia de la compra (RNP-10).</summary>
+        /// <summary>Clave de idempotencia de la compra.</summary>
         public Guid Token { get; set; }
 
         [Display(Name = "Método de pago")]
@@ -63,7 +60,7 @@ namespace AerolineaVIP.Models.ViewModels
         public string CodigoOperacion { get; set; }
     }
 
-    // ===================== Check-in (15) =====================
+    // ----- Check-in (15) -----
     public class FilaCheckInVM
     {
         public int AsignacionId { get; set; }
@@ -106,7 +103,7 @@ namespace AerolineaVIP.Models.ViewModels
         }
     }
 
-    // ===================== Comprobantes (16) =====================
+    // ----- Comprobantes (16) -----
     public class LineaComprobanteVM
     {
         public string Pasajero { get; set; }

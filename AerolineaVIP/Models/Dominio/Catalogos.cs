@@ -1,10 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Entidades de catálogo de la base de dominio AerolineaVIP.
-// Generadas con el enfoque "Code First desde base de datos existente" (Database
-// First sin EDMX): cada clase corresponde a una tabla del script
-// Script_BD_AerolineaVIP.sql. Las validaciones de interfaz se declaran en las
-// clases parciales de la carpeta Models/Dominio/Metadatos (RN-10, 11.1.4).
-// -----------------------------------------------------------------------------
+﻿// Tablas de catálogo (estados, monedas, métodos de pago, etc.).
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -50,10 +44,7 @@ namespace AerolineaVIP.Models.Dominio
         public string Descripcion { get; set; }
     }
 
-    /// <summary>
-    /// Estado de un asiento dentro de una reserva. PENDIENTE (morado) y CONFIRMADA
-    /// (rojo) ocupan inventario; CANCELADA y LIBERADA no (verde).
-    /// </summary>
+    /// <summary>Estado del asiento en la reserva: PENDIENTE y CONFIRMADA lo ocupan.</summary>
     [Table("EstadoAsignacion")]
     public partial class EstadoAsignacion
     {

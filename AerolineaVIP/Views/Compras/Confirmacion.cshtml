@@ -3,7 +3,7 @@
     ViewBag.Title = "Confirmación";
     var r = Model.Reserva;
 }
-@* Pantalla 12. Confirmación de compra o reserva: solo datos persistidos y estados reales. *@
+@* Pantalla 12. Confirmación. *@
 <h1 class="h3">@(r.EstadoReservaCodigo == "CONFIRMADA" ? "Compra confirmada" : "Resultado de la operación")</h1>
 
 @if (r.EstadoReservaCodigo == "CONFIRMADA" && Model.EstadoPago == "APROBADO")

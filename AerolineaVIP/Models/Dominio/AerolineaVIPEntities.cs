@@ -1,13 +1,7 @@
-﻿// -----------------------------------------------------------------------------
-// Contexto de Entity Framework 6 para la base de DOMINIO (AerolineaVIP).
-// La estructura la crea Script_BD_AerolineaVIP.sql (tablas, vistas, triggers y
-// procedimiento). Por eso el inicializador es null: EF nunca crea ni modifica la
-// base; solo la consulta y la actualiza respetando sus reglas.
-// La base de Identity (AerolineaVIP_Identity) usa otro contexto y otra cadena.
-// -----------------------------------------------------------------------------
+﻿// Contexto de EF para la base AerolineaVIP. La base la crea el script SQL,
+// por eso no se usa inicializador.
 using System.Data.Entity;
 using System.Data.Entity.ModelConfiguration.Conventions;
-using System.Web.UI;
 
 namespace AerolineaVIP.Models.Dominio
 {

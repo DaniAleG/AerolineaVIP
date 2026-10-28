@@ -1,10 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Controlador CRUD generado con el patrón de scaffolding de ASP.NET MVC 5
-// ("Controlador de MVC 5 con vistas que usan Entity Framework") y ajustado al
-// proyecto: layout general, validación cliente/servidor, mensajes de las reglas de
-// la base (triggers, CHECK, FK) y permisos por rol verificados en el servidor.
-// Tabla: dbo.Asiento
-// -----------------------------------------------------------------------------
+﻿// CRUD de Asiento (generado con scaffolding y adaptado).
 using System;
 using System.Data.Entity;
 using System.Linq;
@@ -30,7 +24,7 @@ namespace AerolineaVIP.Controllers
         // GET: Asientos
         public ActionResult Index()
         {
-            ViewBag.Nota = "Nomenclatura propuesta DP-11: fila (1–4) + lado (D/I). No existe 1I (zona de la puerta). Clave compuesta (modelo, número).";
+            ViewBag.Nota = "Nomenclatura DP-11: fila (1–4) + lado (D/I). No existe 1I (zona de la puerta). Clave compuesta (modelo, número).";
             return View(db.Asiento.AsNoTracking().Include(s => s.ModeloAeronave).OrderBy(s => s.NumeroAsiento).ToList());
         }
 
@@ -98,7 +92,7 @@ namespace AerolineaVIP.Controllers
             if (!modeloAeronaveId.HasValue || !numeroAsiento.HasValue) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             var e = db.Asiento.Find(modeloAeronaveId.Value, numeroAsiento.Value);
             if (e == null) return HttpNotFound();
-            // Solo se actualizan los campos editables (equivalente a [Bind(Include = ...)]).
+            // Solo se actualizan los campos editables.
             if (TryUpdateModel(e, "", new[] { "Codigo", "Fila", "Lado", "Ubicacion" }))
             {
                 if (e.Codigo != null) e.Codigo = e.Codigo.Trim().ToUpper();
@@ -144,7 +138,7 @@ namespace AerolineaVIP.Controllers
             }
             catch (Exception ex)
             {
-                // Integridad referencial: no se eliminan registros con información asociada.
+                // No se elimina si tiene registros relacionados.
                 db.Entry(e).State = EntityState.Unchanged;
                 ViewBag.Error = ErroresBD.Mensaje(ex);
                 return View("Delete", e);

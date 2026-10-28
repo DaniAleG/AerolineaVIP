@@ -1,9 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Traduce las excepciones de SQL Server a mensajes comprensibles.
-// Los triggers de reglas de negocio del script lanzan errores 50001–50052 con un
-// texto en español; las restricciones de integridad lanzan 2601/2627 (únicos) y
-// 547 (claves foráneas o CHECK).
-// -----------------------------------------------------------------------------
+﻿// Convierte los errores de SQL Server (triggers, únicos, FK) en mensajes para el usuario.
 using System;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;

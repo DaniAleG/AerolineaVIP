@@ -5,10 +5,7 @@ using AerolineaVIP.Servicios;
 
 namespace AerolineaVIP.Controllers
 {
-    /// <summary>
-    /// Base de los controladores de dominio: contexto de EF por solicitud y comprobación
-    /// de permisos efectivos en el SERVIDOR (RNP-09), nunca solo ocultando botones.
-    /// </summary>
+    /// <summary>Controlador base: contexto de EF y datos del usuario actual.</summary>
     public abstract class ControladorBase : Controller
     {
         protected readonly AerolineaVIPEntities db = new AerolineaVIPEntities();

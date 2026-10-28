@@ -1,10 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Controlador CRUD generado con el patrón de scaffolding de ASP.NET MVC 5
-// ("Controlador de MVC 5 con vistas que usan Entity Framework") y ajustado al
-// proyecto: layout general, validación cliente/servidor, mensajes de las reglas de
-// la base (triggers, CHECK, FK) y permisos por rol verificados en el servidor.
-// Tabla: dbo.Aeropuerto
-// -----------------------------------------------------------------------------
+﻿// CRUD de Aeropuerto (generado con scaffolding y adaptado).
 using System;
 using System.Data.Entity;
 using System.Linq;
@@ -29,7 +23,7 @@ namespace AerolineaVIP.Controllers
         // GET: Aeropuertos
         public ActionResult Index()
         {
-            ViewBag.Nota = "Los aeropuertos alimentan los selectores de búsqueda. El aeropuerto de Galápagos (GPS) es un supuesto pendiente (DP-01).";
+            ViewBag.Nota = "Los aeropuertos alimentan los selectores de búsqueda. Galápagos opera con un único aeropuerto activo: GPS (DP-01).";
             return View(db.Aeropuerto.AsNoTracking().OrderBy(a => a.Localidad).ToList());
         }
 
@@ -97,7 +91,7 @@ namespace AerolineaVIP.Controllers
             if (!id.HasValue) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             var e = db.Aeropuerto.Find(id.Value);
             if (e == null) return HttpNotFound();
-            // Solo se actualizan los campos editables (equivalente a [Bind(Include = ...)]).
+            // Solo se actualizan los campos editables.
             if (TryUpdateModel(e, "", new[] { "CodigoIATA", "Nombre", "Localidad", "Activo" }))
             {
                 if (e.CodigoIATA != null) e.CodigoIATA = e.CodigoIATA.Trim().ToUpper();
@@ -143,7 +137,7 @@ namespace AerolineaVIP.Controllers
             }
             catch (Exception ex)
             {
-                // Integridad referencial: no se eliminan registros con información asociada.
+                // No se elimina si tiene registros relacionados.
                 db.Entry(e).State = EntityState.Unchanged;
                 ViewBag.Error = ErroresBD.Mensaje(ex);
                 return View("Delete", e);

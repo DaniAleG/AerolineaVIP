@@ -7,10 +7,7 @@ using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace AerolineaVIP.Models
 {
-    /// <summary>
-    /// Usuario de ASP.NET Identity ampliado con Nombres y Apellidos (pantalla 3).
-    /// Se guarda en la base INDEPENDIENTE AerolineaVIP_Identity.
-    /// </summary>
+    /// <summary>Usuario de Identity con Nombres y Apellidos.</summary>
     public class ApplicationUser : IdentityUser
     {
         [StringLength(100)]

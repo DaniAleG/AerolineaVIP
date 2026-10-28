@@ -4,7 +4,7 @@ using AerolineaVIP.Models.ViewModels;
 
 namespace AerolineaVIP.Servicios
 {
-    /// <summary>Comprobantes ACADÉMICOS (pantalla 16): vista previa y PDF.</summary>
+    /// <summary>Comprobantes académicos (pantalla 16): vista previa y PDF.</summary>
     public class ServicioComprobantes
     {
         private readonly AerolineaVIPEntities db;

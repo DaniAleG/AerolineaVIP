@@ -1,11 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Compra y pago SIMULADO (pantalla 11). No existe pasarela ni banco: el resultado
-// lo decide una regla académica documentada (DP-06):
-//     número de tarjeta terminado en 0000  ->  RECHAZADO
-//     cualquier otro número con formato válido -> APROBADO
-// Solo se guardan marca, últimos 4 dígitos, titular y código de operación.
-// Reserva, compra y pago se administran por separado (RNP-06).
-// -----------------------------------------------------------------------------
+﻿// Compra y pago simulado (pantalla 11). Tarjeta terminada en 0000 = rechazado.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +33,7 @@ namespace AerolineaVIP.Servicios
             return prefijo + (max + 1).ToString("000000");
         }
 
-        /// <summary>Comprueba si el número coincide con algún prefijo de referencia de la marca ("4", "51-55, 2221-2720"...).</summary>
+        /// <summary>Verifica que el número empiece con un prefijo de la marca.</summary>
         public static bool CoincidePrefijo(string numero, string prefijos)
         {
             if (string.IsNullOrWhiteSpace(prefijos)) return true;
@@ -67,7 +60,7 @@ namespace AerolineaVIP.Servicios
             return false;
         }
 
-        /// <summary>Validación de formato del formulario de tarjeta (repite en el servidor lo que hace jQuery).</summary>
+        /// <summary>Valida los datos de la tarjeta en el servidor.</summary>
         public Dictionary<string, string> ValidarTarjeta(PagoVM vm, MarcaTarjeta marca)
         {
             var errores = new Dictionary<string, string>();
@@ -100,10 +93,7 @@ namespace AerolineaVIP.Servicios
             return errores;
         }
 
-        /// <summary>
-        /// Registra la compra (si no existe) y el pago simulado. La compra solo pasa a PAGADA
-        /// después de registrar un pago APROBADO. La clave de idempotencia evita duplicados.
-        /// </summary>
+        /// <summary>Registra la compra y el pago. Si se aprueba, la reserva queda confirmada.</summary>
         public ResultadoPago Procesar(PagoVM vm, Reserva reserva)
         {
             var resultado = new ResultadoPago();

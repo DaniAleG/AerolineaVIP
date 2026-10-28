@@ -1,9 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Generador mínimo de documentos PDF 1.4 escrito en C# (sin librerías externas),
-// suficiente para el comprobante académico: texto con Helvetica / Helvetica-Bold
-// (codificación WinAnsi, admite tildes y ñ), líneas y rectángulos. Se eligió
-// para no depender de paquetes NuGet adicionales ni de ejecutables externos.
-// -----------------------------------------------------------------------------
+﻿// Genera un PDF sencillo para el comprobante, sin librerías externas.
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -57,7 +52,7 @@ namespace AerolineaVIP.Servicios
             return sb.ToString();
         }
 
-        /// <summary>Texto en coordenadas desde la esquina SUPERIOR izquierda (y crece hacia abajo).</summary>
+        /// <summary>Texto en coordenadas desde la esquina superior izquierda (y crece hacia abajo).</summary>
         public void Texto(double x, double y, string texto, double tamano = 10, bool negrita = false, double gris = 0)
         {
             actual.AppendFormat("{0} g BT /{1} {2} Tf {3} {4} Td ({5}) Tj ET\n",

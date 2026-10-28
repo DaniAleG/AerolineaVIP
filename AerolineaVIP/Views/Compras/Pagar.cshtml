@@ -7,7 +7,7 @@
     var ultima = d.Lineas.OrderBy(l => l.SalidaProgramada).LastOrDefault();
     var tramos = d.Lineas.Select(l => l.CodigoVuelo).Distinct().Count();
 }
-@* Pantalla 11. Proceso de compra y pago SIMULADO. *@
+@* Pantalla 11. Pago simulado. *@
 @Html.Partial("_Pasos", 4)
 <h1 class="h3">Proceso de compra y pago</h1>
 <div class="aviso-simulacion mb-3" role="note"><strong>Aviso:</strong> Simulación académica: no se realizan cobros reales. No se guarda el número completo, el vencimiento ni el código de seguridad de la tarjeta.</div>

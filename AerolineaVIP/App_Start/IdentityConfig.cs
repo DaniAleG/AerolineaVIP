@@ -10,11 +10,7 @@ using AerolineaVIP.Models;
 
 namespace AerolineaVIP
 {
-    /// <summary>
-    /// Servicio de correo SIMULADO (alcance académico): no envía correos reales.
-    /// El enlace de recuperación de contraseña se escribe en la ventana de
-    /// Salida (Output) de Visual Studio para poder probar el flujo.
-    /// </summary>
+    /// <summary>Correo simulado: el enlace de recuperación se muestra en la ventana Salida.</summary>
     public class EmailService : IIdentityMessageService
     {
         public Task SendAsync(IdentityMessage message)

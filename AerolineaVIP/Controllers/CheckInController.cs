@@ -9,12 +9,7 @@ using AerolineaVIP.Servicios;
 
 namespace AerolineaVIP.Controllers
 {
-    /// <summary>
-    /// Pantalla 15. Check-in web. Política propuesta DP-12 (parametrizable en Web.config):
-    /// abre N horas antes de la salida y cierra M horas antes; solo asientos CONFIRMADA
-    /// (compra pagada). El trigger trg_CheckIn_Validar y el índice UX_CheckIn_Vigente lo
-    /// garantizan también en la base.
-    /// </summary>
+    /// <summary>Pantalla 15: check-in web (horario según DP-12).</summary>
     [Authorize(Roles = RolesApp.Todos)]
     public class CheckInController : ControladorBase
     {

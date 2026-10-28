@@ -23,7 +23,7 @@ namespace AerolineaVIP.Controllers
             get { return HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>(); }
         }
 
-        // ===================== Pantalla 17: accesos (sin dashboard) =====================
+        // ----- Pantalla 17: accesos (sin dashboard) -----
         public ActionResult Index()
         {
             return View();
@@ -35,7 +35,7 @@ namespace AerolineaVIP.Controllers
             return View();
         }
 
-        // ===================== Pantalla 18: vuelos e itinerarios =====================
+        // ----- Pantalla 18: vuelos e itinerarios -----
         public ActionResult Vuelos(AdminVuelosVM vm)
         {
             Reservas.ExpirarVencidas();
@@ -125,10 +125,7 @@ namespace AerolineaVIP.Controllers
             vm.EstadosEdicion = new SelectList(db.EstadoVuelo.ToList().Select(e => new { e.Codigo, T = Formato.TextoEstadoVuelo(e.Codigo) }), "Codigo", "T");
         }
 
-        /// <summary>
-        /// Revisión de la programación por aeronave: superposición (RNP-02, bloqueante),
-        /// tiempo de preparación (DP-03) y continuidad geográfica (DP-02), estas dos como advertencias.
-        /// </summary>
+        /// <summary>Revisa choques de horario y advertencias de cada aeronave.</summary>
         private List<ConflictoVM> Conflictos(DateTime desde, DateTime hasta)
         {
             var lista = new List<ConflictoVM>();
@@ -152,7 +149,7 @@ namespace AerolineaVIP.Controllers
                             Detalle = "La aeronave " + mat + " tiene vuelos superpuestos (" + Formato.FechaHora(a.SalidaProgramada) + " y " + Formato.FechaHora(b.SalidaProgramada) + ")." });
                     else if (espera < minutos)
                         lista.Add(new ConflictoVM { Tipo = "Preparación insuficiente (DP-03)", Aeronave = mat, Vuelo1 = a.CodigoVuelo, Vuelo2 = b.CodigoVuelo,
-                            Detalle = "Solo " + espera + " min entre la llegada de " + a.CodigoVuelo + " y la salida de " + b.CodigoVuelo + " (mínimo propuesto: " + minutos + " min)." });
+                            Detalle = "Solo " + espera + " min entre la llegada de " + a.CodigoVuelo + " y la salida de " + b.CodigoVuelo + " (mínimo: " + minutos + " min)." });
                     if (a.Destino != b.Origen)
                         lista.Add(new ConflictoVM { Tipo = "Continuidad geográfica (DP-02)", Aeronave = mat, Vuelo1 = a.CodigoVuelo, Vuelo2 = b.CodigoVuelo,
                             Detalle = mat + " termina " + a.CodigoVuelo + " en " + a.CiudadDestino + " (" + Formato.FechaHora(a.LlegadaProgramada) + ") y "
@@ -179,7 +176,7 @@ namespace AerolineaVIP.Controllers
             else if (!model.AeronaveId.HasValue && activos > 0)
                 error = "No se puede quitar la aeronave: el vuelo tiene " + activos + " asiento(s) vigentes (RNP-01).";
 
-            // Conflicto operativo con mensaje claro antes de llegar al trigger (RNP-02).
+            // Conflicto operativo con mensaje claro antes de llegar al trigger.
             if (error == null && model.AeronaveId.HasValue && model.EstadoVueloCodigo != "CANCELADO")
             {
                 var actual = db.vw_VueloDetalle.AsNoTracking().First(v => v.VueloId == vuelo.VueloId);
@@ -248,7 +245,7 @@ namespace AerolineaVIP.Controllers
             return RedirectToAction("Vuelos", new { Desde = desde.Value.ToString("yyyy-MM-dd"), Hasta = hasta.Value.ToString("yyyy-MM-dd") });
         }
 
-        // ===================== Pantalla 19: aeronaves =====================
+        // ----- Pantalla 19: aeronaves -----
         public ActionResult Aeronaves(int? id)
         {
             var hoy = DateTime.Today;
@@ -297,7 +294,7 @@ namespace AerolineaVIP.Controllers
 
             if (ModelState.IsValid && db.Aeronave.Any(x => x.Matricula == model.Matricula && x.AeronaveId != model.AeronaveId))
                 ModelState.AddModelError("Matricula", "La matrícula ya está registrada.");
-            // Cambiar el modelo alteraría la distribución de asientos de vuelos con reservas (no se alteran históricos).
+            // No se cambia el modelo si hay vuelos con reservas.
             if (ModelState.IsValid && model.ModeloAeronaveId != a.ModeloAeronaveId
                 && db.ReservaPasajeroVuelo.Any(r => r.Vuelo.AeronaveId == a.AeronaveId))
                 ModelState.AddModelError("ModeloAeronaveId", "No se puede cambiar el modelo: la aeronave tiene asignaciones de asientos registradas.");
@@ -335,7 +332,7 @@ namespace AerolineaVIP.Controllers
             return View(vm);
         }
 
-        // ===================== Pantalla 20: usuarios, pasajeros y reservas =====================
+        // ----- Pantalla 20: usuarios, pasajeros y reservas -----
         [OverrideAuthorization]
         [Authorize(Roles = RolesApp.Personal)]
         public ActionResult Gestion(AdminGestionVM vm)
@@ -509,7 +506,7 @@ namespace AerolineaVIP.Controllers
             return RedirectToAction("Gestion", new { tab = "usuarios" });
         }
 
-        // ===================== Pantalla 21: consultas y reportes =====================
+        // ----- Pantalla 21: consultas y reportes -----
         public ActionResult Reportes(ReportesVM vm)
         {
             vm.Consultas = new SelectList(new[]

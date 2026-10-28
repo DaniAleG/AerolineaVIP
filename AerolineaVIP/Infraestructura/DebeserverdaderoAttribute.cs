@@ -4,10 +4,7 @@ using System.Web.Mvc;
 
 namespace AerolineaVIP.Infraestructura
 {
-    /// <summary>
-    /// Obliga a marcar una casilla (aceptación de condiciones). Valida en el servidor y,
-    /// mediante el adaptador "debeserverdadero" de site.js, también en el cliente con jQuery.
-    /// </summary>
+    /// <summary>Obliga a marcar una casilla (también se valida en el cliente).</summary>
     public class DebeSerVerdaderoAttribute : ValidationAttribute, IClientValidatable
     {
         public DebeSerVerdaderoAttribute() : base("Debe marcar la casilla {0}.") { }

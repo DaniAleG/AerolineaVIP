@@ -1,14 +1,5 @@
-﻿// -----------------------------------------------------------------------------
-// Inicialización por CÓDIGO de ASP.NET Identity (entregables 2 a 6 del ZIP):
-//   - creación de los roles,
-//   - creación del superusuario, del administrador y de los usuarios iniciales,
-//   - asignación de roles a cada usuario.
-// Se invoca desde Global.asax.cs (Application_Start). Es idempotente: si los roles
-// o usuarios ya existen no se duplican.
-// Los clientes de demostración usan los mismos Id que Script_BD_AerolineaVIP.sql
-// asigna a Reserva.UsuarioId (7c1e4a20-000X-...), para que sus reservas aparezcan
-// en "Mis reservas" y en los comprobantes.
-// -----------------------------------------------------------------------------
+﻿// Crea por código los roles, los usuarios iniciales y les asigna su rol.
+// Se llama desde Application_Start. Si ya existen, no los duplica.
 using System;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
@@ -102,10 +93,7 @@ namespace AerolineaVIP
             }
         }
 
-        /// <summary>
-        /// Garantiza que existan la base, las tablas de Identity y las columnas
-        /// Nombres/Apellidos que amplían AspNetUsers.
-        /// </summary>
+        /// <summary>Crea la base de Identity si no existe y agrega Nombres y Apellidos.</summary>
         private static void PrepararBase(ApplicationDbContext db)
         {
             if (!db.Database.Exists())

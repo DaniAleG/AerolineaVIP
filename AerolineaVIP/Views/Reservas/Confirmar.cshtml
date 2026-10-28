@@ -3,7 +3,7 @@
     ViewBag.Title = "Reserva de pasajes";
     var r = Model.Resumen;
 }
-@* Pantalla 10. Reserva de pasajes: revalida disponibilidad y registra la reserva PENDIENTE (asientos morados). *@
+@* Pantalla 10. Confirmar la reserva. *@
 @Html.Partial("_Pasos", 3)
 <h1 class="h3">Reserva de pasajes</h1>
 @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
@@ -66,7 +66,7 @@
     <div class="tarjeta mb-3">
         <h2 class="tarjeta-titulo">Condiciones de la reserva</h2>
         <div class="border rounded p-3 mb-3 small" style="max-height: 180px; overflow:auto" tabindex="0" aria-label="Condiciones de la reserva">
-            <p class="mb-2"><strong>Política propuesta por el grupo (pendiente de aprobación).</strong></p>
+            <p class="mb-2"><strong>Condiciones vigentes de la aerolínea.</strong></p>
             <ul class="mb-0">
                 <li>La reserva se registra en estado <strong>Pendiente de pago</strong> y los asientos quedan reservados (morado). Una reserva no equivale a una compra pagada.</li>
                 <li>DP-07: la reserva pendiente se conserva <strong>@Model.HorasRetencion horas</strong> o hasta @Politicas.HorasCierreVentaAntesSalida horas antes de la primera salida, lo que ocurra primero. Para esta operación vencería el <strong>@Formato.FechaHora(Model.ExpiracionEstimada)</strong>; si no se paga, expira y los asientos se liberan.</li>
@@ -90,7 +90,7 @@
             @Html.ValidationMessageFor(m => m.AceptaCondiciones)
         </div>
     </div>
-    <div class="alert alert-info" role="status"><strong>Información:</strong> La reserva pendiente se conservará según la política de retención propuesta (DP-07).</div>
+    <div class="alert alert-info" role="status"><strong>Información:</strong> La reserva pendiente se conservará según la política de retención de la aerolínea (DP-07).</div>
     <div class="d-flex flex-wrap gap-2">
         <button type="submit" name="Accion" value="reservar" class="btn btn-outline-primary" data-texto-carga="Registrando reserva…">Confirmar reserva</button>
         <button type="submit" name="Accion" value="pagar" class="btn btn-primary" data-texto-carga="Registrando reserva…">Confirmar y pagar</button>

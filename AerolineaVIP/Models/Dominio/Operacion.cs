@@ -1,7 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-// Entidades de operación aérea: aeropuertos, rutas, frecuencias, flota, asientos,
-// vuelos e itinerarios (tablas A3 y A4 del script).
-// -----------------------------------------------------------------------------
+﻿// Aeropuertos, rutas, frecuencias, aeronaves, asientos, vuelos e itinerarios.
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -90,10 +87,7 @@ namespace AerolineaVIP.Models.Dominio
         public virtual ICollection<Asiento> Asientos { get; set; }
     }
 
-    /// <summary>
-    /// Distribución de cabina por modelo (DP-11). Clave compuesta
-    /// (ModeloAeronaveId, NumeroAsiento). Código = fila + lado (D/I).
-    /// </summary>
+    /// <summary>Asientos de cada modelo (1D, 2I, ...). Clave compuesta.</summary>
     [Table("Asiento")]
     public partial class Asiento
     {

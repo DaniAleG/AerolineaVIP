@@ -1,7 +1,4 @@
-﻿/* =========================================================================
-   Reglas de validación del cliente que complementan las Data Annotations
-   (RN-10). Toda regla se repite en el servidor.
-   ========================================================================= */
+﻿// Reglas extra para jQuery Validation.
 (function ($) {
     'use strict';
     if (!$.validator || !$.validator.unobtrusive) { return; }
@@ -35,7 +32,7 @@
         return this.optional(element) || /^\d{10}$/.test(value);
     }, 'La cédula debe tener 10 dígitos.');
 
-    // A3: los errores se asocian al control y se anuncian.
+    // Asocia el mensaje de error a su campo.
     $.validator.setDefaults({
         highlight: function (element) {
             $(element).addClass('input-validation-error').attr('aria-invalid', 'true');

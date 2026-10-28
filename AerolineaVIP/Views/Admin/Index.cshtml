@@ -2,7 +2,7 @@
     ViewBag.Title = "Administración";
     var esSuper = User.IsInRole(RolesApp.SuperUsuario);
 }
-@* Pantalla 17. Panel del administrador: SOLO accesos (el dashboard está excluido de la primera entrega). *@
+@* Pantalla 17. Panel del administrador (accesos). *@
 <h1 class="h3">Administración</h1>
 <p class="text-muted">Accesos a los módulos autorizados para su rol (@(esSuper ? "SuperUsuario: todas las funciones" : "Administrador: operaciones CRUD permitidas")). Cada acceso se vuelve a validar en el servidor.</p>
 

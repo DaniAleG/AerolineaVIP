@@ -1,12 +1,8 @@
-﻿/* =========================================================================
-   Comportamientos comunes con jQuery (solo mejoran la experiencia; todas las
-   reglas se validan también en el servidor).
-   ========================================================================= */
+﻿// Funciones comunes con jQuery.
 (function ($) {
     'use strict';
 
-    // Estado de carga: el botón se deshabilita y cambia su texto al enviar
-    // (evita envíos repetidos, RNP-10).
+    // Deshabilita el botón al enviar para evitar doble envío.
     $(document).on('submit', 'form', function (e) {
         var $form = $(this);
         if ($.fn.valid && $form.data('validator') && !$form.valid()) { return; }
@@ -77,7 +73,7 @@
         var hoy = new Date();
         var iso = hoy.getFullYear() + '-' + ('0' + (hoy.getMonth() + 1)).slice(-2) + '-' + ('0' + hoy.getDate()).slice(-2);
         $('input[type=date][data-min-hoy]').attr('min', iso);
-        // Lleva el foco al primer campo con error (17. datos inválidos y recuperación).
+        // Lleva el foco al primer campo con error.
         var $error = $('.input-validation-error').first();
         if ($error.length) { $error.trigger('focus'); }
     });
