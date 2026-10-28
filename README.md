@@ -15,8 +15,8 @@ ASP.NET Framework 4.8.1 · MVC 5 · Razor · Bootstrap 5 · jQuery · ASP.NET Id
 ```
 README.md
 .gitignore
-src/        AerolineaVIP.slnx y proyecto AerolineaVIP (ASP.NET Framework 4.8.1 MVC)
-database/   Script_BD_AerolineaVIP_Unificado.sql y Script_Complemento_Identity.sql (opcional)
+src/        AerolineaVIP_Grupo4.slnx y proyecto AerolineaVIP (ASP.NET Framework 4.8.1 MVC)
+database/   Script_BD_AerolineaVIP_Unificado.sql
 docs/       Primera_Entrega_Documentacion_Grupo4.pdf
             UX-UI/    wireframes aplicados y mapa de navegación
             Gestion/  políticas del punto 18.1 (DP-01 a DP-15)
@@ -29,7 +29,7 @@ docs/       Primera_Entrega_Documentacion_Grupo4.pdf
    - `DefaultConnection` → base de Identity `AerolineaVIP_Identity`
 
    Con SQL Express cambiar `Data Source=.` por `.\SQLEXPRESS` en las dos.
-3. Abrir `src/AerolineaVIP.slnx` en Visual Studio, restaurar los paquetes NuGet y ejecutar (F5).
+3. Abrir `src/AerolineaVIP_Grupo4.slnx` en Visual Studio, restaurar los paquetes NuGet y ejecutar (F5).
 4. Al iniciar, `Global.asax.cs` llama a `InicializadorIdentity` y crea por código los roles y los usuarios iniciales con su rol.
 
 ## Usuarios iniciales
