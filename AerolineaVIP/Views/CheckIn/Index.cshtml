@@ -1,0 +1,114 @@
+﻿@model CheckInVM
+@{
+    ViewBag.Title = "Check-in";
+}
+@* Pantalla 15. Check-in web (política propuesta DP-12, parametrizable). *@
+<h1 class="h3">Check-in</h1>
+<p class="text-muted small">Política propuesta (DP-12, pendiente de aprobación): el check-in web abre @Model.HorasApertura horas antes de la salida y cierra @Model.HorasCierre hora(s) antes. Solo para reservas pagadas.</p>
+
+@using (Html.BeginForm("Index", "CheckIn", FormMethod.Post, new { id = "formCheckIn", novalidate = "novalidate" }))
+{
+    @Html.AntiForgeryToken()
+    <section class="tarjeta mb-3" aria-labelledby="paso1">
+        <h2 id="paso1" class="h6">1. Localizar reserva</h2>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                @Html.LabelFor(m => m.CodigoReserva, new { @class = "form-label" }) <span class="req">*</span>
+                @Html.TextBoxFor(m => m.CodigoReserva, new { @class = "form-control", placeholder = "RV00000000", maxlength = 10, style = "text-transform:uppercase" })
+                @Html.ValidationMessageFor(m => m.CodigoReserva)
+            </div>
+            <div class="col-md-5">
+                @Html.LabelFor(m => m.NumeroDocumento, new { @class = "form-label" }) <span class="req">*</span>
+                @Html.TextBoxFor(m => m.NumeroDocumento, new { @class = "form-control", maxlength = 20 })
+                @Html.ValidationMessageFor(m => m.NumeroDocumento)
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" name="accion" value="buscar" class="btn btn-outline-primary" data-texto-carga="Buscando reserva…">Iniciar check-in</button>
+            </div>
+        </div>
+    </section>
+
+    if (Model.Mensaje != null)
+    {
+        <div class="alert alert-@Model.TipoMensaje" role="@(Model.TipoMensaje == "danger" ? "alert" : "status")">
+            <strong>@(Model.TipoMensaje == "danger" ? "Error:" : Model.TipoMensaje == "warning" ? "Advertencia:" : "Información:")</strong> @Model.Mensaje
+        </div>
+    }
+
+    if (Model.Buscado && Model.Filas.Any())
+    {
+        <section class="tarjeta p-0" aria-labelledby="paso2">
+            <h2 id="paso2" class="h6 p-3 mb-0">2. Pasajeros</h2>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 tabla-apilada">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col"><span class="visually-hidden">Seleccionar</span></th>
+                            <th scope="col">Pasajero</th><th scope="col">Vuelo</th><th scope="col">Ruta</th><th scope="col">Salida</th>
+                            <th scope="col">Asiento</th><th scope="col">Elegibilidad</th><th scope="col">Check-in</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var f in Model.Filas)
+                        {
+                            <tr>
+                                <td data-label="Seleccionar">
+                                    @if (f.Elegible)
+                                    {
+                                        <input class="form-check-input" type="checkbox" name="Seleccionados" value="@f.AsignacionId" id="sel_@f.AsignacionId"
+                                               aria-label="Registrar check-in de @f.Pasajero en @f.CodigoVuelo" />
+                                    }
+                                    else
+                                    {
+                                        <span aria-hidden="true">—</span>
+                                    }
+                                </td>
+                                <td data-label="Pasajero">@f.Pasajero<br /><span class="texto-ayuda">@f.Documento</span></td>
+                                <td data-label="Vuelo">@f.CodigoVuelo</td>
+                                <td data-label="Ruta">@f.Ruta</td>
+                                <td data-label="Salida">@Formato.FechaHora(f.Salida)</td>
+                                <td data-label="Asiento" class="fw-bold">@f.Asiento</td>
+                                <td data-label="Elegibilidad"><span class="@(f.Elegible ? "estado estado-ok" : "estado estado-neutro")">@f.Elegibilidad</span></td>
+                                <td data-label="Check-in">
+                                    @if (f.EstadoCheckIn != null)
+                                    {
+                                        <span class="@Formato.ClaseEstado(f.EstadoCheckIn)">@(f.EstadoCheckIn == "COMPLETADO" ? "Completado" : "Anulado")</span>
+                                        <span class="texto-ayuda d-block">@Formato.FechaHora(f.FechaCheckIn)</span>
+                                    }
+                                    else
+                                    {
+                                        <text>—</text>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-3 d-flex flex-wrap gap-2">
+                <button type="submit" name="accion" value="confirmar" class="btn btn-primary" data-texto-carga="Registrando check-in…"
+                        disabled="@(Model.Filas.Any(f => f.Elegible) ? null : "disabled")">Confirmar</button>
+                <button type="submit" name="accion" value="buscar" class="btn btn-outline-secondary">Consultar estado</button>
+                <a class="btn btn-link" href="@Url.Action("MisReservas", "Reservas")">Ir a mis reservas</a>
+            </div>
+        </section>
+    }
+}
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $('#formCheckIn').on('submit', function (e) {
+            var accion = $(document.activeElement).val();
+            if (accion === 'confirmar' && !$('input[name="Seleccionados"]:checked').length) {
+                e.preventDefault();
+                alertaCheckin();
+            }
+        });
+        function alertaCheckin() {
+            if (!$('#avisoSeleccion').length) {
+                $('<div id="avisoSeleccion" class="alert alert-warning mt-2" role="alert"><strong>Advertencia:</strong> Seleccione al menos un pasajero.</div>').insertBefore('#paso2');
+            }
+        }
+    </script>
+}

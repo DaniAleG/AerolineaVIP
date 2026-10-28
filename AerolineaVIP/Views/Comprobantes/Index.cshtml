@@ -1,0 +1,136 @@
+﻿@model ComprobantesVM
+@{
+    ViewBag.Title = "Comprobantes";
+}
+@* Pantalla 16. Visualización de comprobantes ACADÉMICOS (vista previa, impresión y PDF). *@
+<h1 class="h3 no-imprimir">Comprobantes</h1>
+
+@using (Html.BeginForm("Index", "Comprobantes", FormMethod.Get, new { id = "formComprobantes", @class = "tarjeta mb-3 no-imprimir", novalidate = "novalidate" }))
+{
+    <div class="row g-3 align-items-end">
+        <div class="col-6 col-md-3">
+            @Html.LabelFor(m => m.Desde, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.Desde, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control" })
+        </div>
+        <div class="col-6 col-md-3">
+            @Html.LabelFor(m => m.Hasta, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.Hasta, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.Hasta)
+        </div>
+        <div class="col-md-3">
+            @Html.LabelFor(m => m.Tipo, new { @class = "form-label" })
+            @Html.DropDownListFor(m => m.Tipo, Model.Tipos, new { @class = "form-select" })
+        </div>
+        <div class="col-md-3">
+            @Html.LabelFor(m => m.Buscar, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.Buscar, new { @class = "form-control", placeholder = "RV00000001 o ACAD-000001" })
+        </div>
+        <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+            <button type="button" class="btn btn-link" data-limpiar="#formComprobantes">Limpiar</button>
+        </div>
+    </div>
+}
+
+@if (!Model.Lista.Any())
+{
+    <div class="estado-vacio tarjeta">
+        <div class="alert alert-info d-inline-block" role="status"><strong>Información:</strong> @(Model.Desde.HasValue || Model.Hasta.HasValue || !string.IsNullOrEmpty(Model.Tipo) || !string.IsNullOrEmpty(Model.Buscar) ? "No hay comprobantes para los filtros seleccionados." : "Aún no tiene comprobantes.")</div>
+    </div>
+}
+else
+{
+    <div class="tarjeta p-0 mb-4 no-imprimir">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 tabla-apilada">
+                <thead class="table-light">
+                    <tr><th scope="col">Número</th><th scope="col">Tipo</th><th scope="col">Fecha</th><th scope="col">Reserva</th><th scope="col" class="text-end">Importe</th><th scope="col">Estado</th><th scope="col" class="text-end">Acciones</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Lista)
+                    {
+                        <tr class="@(Model.Id == c.ComprobanteId ? "table-active" : "")">
+                            <td data-label="Número" class="fw-semibold">@c.NumeroComprobante</td>
+                            <td data-label="Tipo">@c.TipoComprobante</td>
+                            <td data-label="Fecha">@Formato.Fecha(c.FechaEmision)</td>
+                            <td data-label="Reserva">@c.CodigoReserva</td>
+                            <td data-label="Importe" class="text-end">@(c.TipoComprobanteCodigo == "CONFIRMACION" ? "—" : Formato.Dinero(c.TotalOperacion, c.MonedaCodigo))</td>
+                            <td data-label="Estado"><span class="@Formato.ClaseEstado(c.EstadoComprobanteCodigo)">@(c.EstadoComprobanteCodigo == "EMITIDO" ? "Emitido" : "Anulado")</span></td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { Id = c.ComprobanteId, Desde = Model.Desde, Hasta = Model.Hasta, Tipo = Model.Tipo, Buscar = Model.Buscar })#vistaPrevia">Visualizar</a>
+                                <a class="btn btn-sm btn-primary" href="@Url.Action("Pdf", new { id = c.ComprobanteId })">Descargar PDF</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (Model.Seleccionado != null)
+{
+    var d = Model.Seleccionado;
+    var e = d.Encabezado;
+    <section id="vistaPrevia" class="comprobante" aria-labelledby="tituloVista">
+        <div class="cabecera">
+            <div>
+                <div class="fw-bold" style="letter-spacing:.14em">AEROLÍNEA VIP</div>
+                <small>Proyecto académico · operación simulada</small>
+            </div>
+            <div class="text-end">
+                <h2 id="tituloVista" class="h6 text-white mb-0">@e.TipoComprobante</h2>
+                <div class="fs-5 fw-bold">N.º @e.NumeroComprobante</div>
+            </div>
+        </div>
+        <div class="contenido">
+            <div class="row g-3 mb-3 resumen">
+                <div class="col-md-6">
+                    <dl>
+                        <dt>Emisor</dt><dd>@e.EmisorNombre</dd>
+                        <dt>Identificación</dt><dd>@e.EmisorIdentificacion</dd>
+                        <dt>Dirección</dt><dd>@e.EmisorDireccion</dd>
+                        <dt>Emisión</dt><dd>@Formato.FechaHora(e.FechaEmision)</dd>
+                        <dt>Estado</dt><dd>@(e.EstadoComprobanteCodigo == "EMITIDO" ? "Emitido" : "Anulado")</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl>
+                        <dt>Cliente</dt><dd>@d.Cliente</dd>
+                        <dt>Reserva</dt><dd>@e.CodigoReserva</dd>
+                        <dt>Pago</dt><dd>@(e.PagoId.HasValue ? e.MarcaTarjeta + " " + e.TarjetaEnmascarada + " · " + e.CodigoOperacion : "Sin pago")</dd>
+                        <dt>Estado del pago</dt><dd>@Formato.TextoEstadoPago(e.EstadoPagoCodigo)</dd>
+                        <dt>Compra</dt><dd>@Formato.TextoEstadoCompra(e.EstadoCompraCodigo)</dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle tabla-apilada">
+                    <thead><tr><th scope="col">Pasajero</th><th scope="col">Vuelo</th><th scope="col">Ruta</th><th scope="col">Fecha</th><th scope="col">Asiento</th>@if (d.MostrarImportes) { <th scope="col" class="text-end">Importe</th> }</tr></thead>
+                    <tbody>
+                        @foreach (var l in d.Lineas)
+                        {
+                            <tr>
+                                <td data-label="Pasajero">@l.Pasajero</td>
+                                <td data-label="Vuelo">@l.CodigoVuelo</td>
+                                <td data-label="Ruta">@l.Ruta</td>
+                                <td data-label="Fecha">@Formato.Fecha(l.Fecha) · @l.Horario</td>
+                                <td data-label="Asiento">@l.Asiento</td>
+                                @if (d.MostrarImportes) { <td data-label="Importe" class="text-end">@Formato.Dinero(l.Importe, e.MonedaCodigo)</td> }
+                            </tr>
+                        }
+                    </tbody>
+                    @if (d.MostrarImportes)
+                    {
+                        <tfoot><tr><th colspan="5" class="text-end">Total</th><td class="text-end total">@Formato.Dinero(e.TotalOperacion, e.MonedaCodigo)</td></tr></tfoot>
+                    }
+                </table>
+            </div>
+            <div class="alert alert-info mb-0" role="note"><strong>Información:</strong> @e.LeyendaComprobante</div>
+        </div>
+    </section>
+    <div class="mt-3 d-flex gap-2 no-imprimir">
+        <a class="btn btn-primary" href="@Url.Action("Pdf", new { id = e.ComprobanteId })">Descargar PDF</a>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Imprimir</button>
+    </div>
+}
