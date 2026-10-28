@@ -1,0 +1,45 @@
+﻿@{
+    ViewBag.Title = "Administración";
+    var esSuper = User.IsInRole(RolesApp.SuperUsuario);
+}
+@* Pantalla 17. Panel del administrador: SOLO accesos (el dashboard está excluido de la primera entrega). *@
+<h1 class="h3">Administración</h1>
+<p class="text-muted">Accesos a los módulos autorizados para su rol (@(esSuper ? "SuperUsuario: todas las funciones" : "Administrador: operaciones CRUD permitidas")). Cada acceso se vuelve a validar en el servidor.</p>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <a class="tarjeta acceso" href="@Url.Action("Vuelos")">
+            <span class="numero">Pantalla 18</span>
+            <h2>Administrar vuelos e itinerarios</h2>
+            <p class="texto-ayuda mb-0">Generar vuelos desde las frecuencias, asignar aeronaves, cambiar estados, consultar conflictos y revisar tramos.</p>
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a class="tarjeta acceso" href="@Url.Action("Aeronaves")">
+            <span class="numero">Pantalla 19</span>
+            <h2>Gestionar aeronaves</h2>
+            <p class="texto-ayuda mb-0">Flota de tres Embraer Phenom 300E, estado operativo, distribución de asientos y próximas asignaciones.</p>
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a class="tarjeta acceso" href="@Url.Action("Gestion", new { tab = "usuarios" })">
+            <span class="numero">Pantalla 20</span>
+            <h2>Usuarios, pasajeros y reservas</h2>
+            <p class="texto-ayuda mb-0">Consultar y administrar cuentas, pasajeros y reservas. @(esSuper ? "Incluye la asignación de roles." : "La asignación de roles es exclusiva del SuperUsuario.")</p>
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a class="tarjeta acceso" href="@Url.Action("Reportes")">
+            <span class="numero">Pantalla 21</span>
+            <h2>Consultas y reportes</h2>
+            <p class="texto-ayuda mb-0">Ocupación por vuelo, reservas por estado y compras con pagos simulados (tablas con fecha de corte).</p>
+        </a>
+    </div>
+    <div class="col-12">
+        <a class="tarjeta acceso" href="@Url.Action("Mantenimientos")">
+            <span class="numero">CRUD · scaffolding</span>
+            <h2>Mantenimiento de tablas</h2>
+            <p class="texto-ayuda mb-0">Aeropuertos, rutas y tarifas, frecuencias, modelos, asientos, flota, vuelos, itinerarios, tramos, pasajeros, métodos y marcas de pago, monedas, tipos de documento y datos del emisor.</p>
+        </a>
+    </div>
+</div>

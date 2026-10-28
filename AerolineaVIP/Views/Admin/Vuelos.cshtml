@@ -1,0 +1,234 @@
+﻿@model AdminVuelosVM
+@{
+    ViewBag.Title = "Vuelos e itinerarios";
+    var desde = Model.Desde.HasValue ? Model.Desde.Value.ToString("yyyy-MM-dd") : "";
+    var hasta = Model.Hasta.HasValue ? Model.Hasta.Value.ToString("yyyy-MM-dd") : "";
+    Func<string, object> rv = tab => new { Tab = tab, Desde = desde, Hasta = hasta, RutaId = Model.RutaId, Estado = Model.Estado };
+}
+@* Pantalla 18. Administración de vuelos e itinerarios. *@
+<nav aria-label="Ruta de navegación"><ol class="breadcrumb">
+    <li class="breadcrumb-item">@Html.ActionLink("Administración", "Index")</li>
+    <li class="breadcrumb-item active" aria-current="page">Vuelos e itinerarios</li>
+</ol></nav>
+<h1 class="h3">Administración de vuelos e itinerarios</h1>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link @(Model.Tab == "vuelos" ? "active" : "")" href="@Url.Action("Vuelos", rv("vuelos"))" aria-current="@(Model.Tab == "vuelos" ? "page" : null)">Vuelos por fecha</a></li>
+    <li class="nav-item"><a class="nav-link @(Model.Tab == "frecuencias" ? "active" : "")" href="@Url.Action("Vuelos", rv("frecuencias"))" aria-current="@(Model.Tab == "frecuencias" ? "page" : null)">Frecuencias aprobadas</a></li>
+    <li class="nav-item"><a class="nav-link @(Model.Tab == "itinerarios" ? "active" : "")" href="@Url.Action("Vuelos", rv("itinerarios"))" aria-current="@(Model.Tab == "itinerarios" ? "page" : null)">Itinerarios y tramos</a></li>
+</ul>
+
+@if (Model.Tab != "frecuencias")
+{
+    using (Html.BeginForm("Vuelos", "Admin", FormMethod.Get, new { id = "formFiltrosVuelos", @class = "tarjeta mb-3", novalidate = "novalidate" }))
+    {
+        <input type="hidden" name="Tab" value="@Model.Tab" />
+        <div class="row g-3 align-items-end">
+            <div class="col-6 col-md-3">
+                @Html.LabelFor(m => m.Desde, new { @class = "form-label" }) <span class="req">*</span>
+                @Html.TextBoxFor(m => m.Desde, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.Desde)
+            </div>
+            <div class="col-6 col-md-3">
+                @Html.LabelFor(m => m.Hasta, new { @class = "form-label" }) <span class="req">*</span>
+                @Html.TextBoxFor(m => m.Hasta, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.Hasta)
+            </div>
+            <div class="col-md-3">
+                @Html.LabelFor(m => m.RutaId, new { @class = "form-label" })
+                @Html.DropDownListFor(m => m.RutaId, Model.Rutas, "Todas", new { @class = "form-select" })
+            </div>
+            <div class="col-md-3">
+                @Html.LabelFor(m => m.Estado, new { @class = "form-label" })
+                @Html.DropDownListFor(m => m.Estado, Model.Estados, "Todos", new { @class = "form-select" })
+            </div>
+            <div class="col-12 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+                @if (Model.Tab == "vuelos")
+                {
+                    <button type="submit" name="Conflictos" value="true" class="btn btn-outline-secondary">Consultar conflictos</button>
+                }
+            </div>
+        </div>
+    }
+}
+
+@if (Model.Tab == "vuelos")
+{
+    using (Html.BeginForm("GenerarVuelos", "Admin", FormMethod.Post, new { @class = "tarjeta mb-3 d-flex flex-wrap align-items-end gap-3" }))
+    {
+        @Html.AntiForgeryToken()
+        <div>
+            <label for="genDesde" class="form-label">Generar desde *</label>
+            <input type="date" id="genDesde" name="desde" class="form-control" value="@desde" required />
+        </div>
+        <div>
+            <label for="genHasta" class="form-label">hasta *</label>
+            <input type="date" id="genHasta" name="hasta" class="form-control" value="@hasta" required />
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary" data-texto-carga="Generando vuelos…">Generar vuelos</button>
+        </div>
+        <p class="texto-ayuda mb-0 flex-grow-1">Ejecuta <code>usp_GenerarVuelos</code>: crea solo los vuelos de los días autorizados por las frecuencias activas (rango ≤ 366 días). Los vuelos nuevos quedan sin aeronave hasta asignarla.</p>
+    }
+
+    if (Model.Conflictos)
+    {
+        <section class="tarjeta mb-3" aria-labelledby="tituloConflictos">
+            <h2 id="tituloConflictos" class="h6">Revisión de la programación por aeronave</h2>
+            @if (!Model.ListaConflictos.Any())
+            {
+                <div class="alert alert-success mb-0" role="status"><strong>Confirmación:</strong> No se encontraron superposiciones ni advertencias en el rango.</div>
+            }
+            else
+            {
+                <p class="texto-ayuda">Las superposiciones (RNP-02) las impide el trigger <code>trg_Vuelo_Validar</code>. Las advertencias de preparación (DP-03) y continuidad geográfica (DP-02) son propuestas pendientes de aprobación y no bloquean.</p>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0 tabla-apilada">
+                        <thead><tr><th scope="col">Tipo</th><th scope="col">Aeronave</th><th scope="col">Vuelos</th><th scope="col">Detalle</th></tr></thead>
+                        <tbody>
+                            @foreach (var c in Model.ListaConflictos)
+                            {
+                                <tr>
+                                    <td data-label="Tipo"><span class="@(c.Bloqueante ? "estado estado-error" : "estado estado-pendiente")">@c.Tipo</span></td>
+                                    <td data-label="Aeronave">@c.Aeronave</td>
+                                    <td data-label="Vuelos">@c.Vuelo1 → @c.Vuelo2</td>
+                                    <td data-label="Detalle" class="small">@c.Detalle</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+
+    if (Model.Edicion != null)
+    {
+        using (Html.BeginForm("EditarVuelo", "Admin", FormMethod.Post, new { id = "formEditarVuelo", @class = "tarjeta mb-3 border-primary" }))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="VueloId" value="@Model.Edicion.VueloId" />
+            <input type="hidden" name="desde" value="@desde" />
+            <input type="hidden" name="hasta" value="@hasta" />
+            <h2 class="h6">Editar vuelo @Model.Edicion.CodigoVuelo <span class="texto-ayuda fw-normal">· @Model.Edicion.Descripcion</span></h2>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label" for="AeronaveId">Aeronave asignada</label>
+                    @Html.DropDownList("AeronaveId", new SelectList(Model.Aeronaves, "Value", "Text", Model.Edicion.AeronaveId), new { @class = "form-select" })
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="EstadoVueloCodigo">Estado <span class="req">*</span></label>
+                    @Html.DropDownList("EstadoVueloCodigo", new SelectList(Model.EstadosEdicion, "Value", "Text", Model.Edicion.EstadoVueloCodigo), new { @class = "form-select" })
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" data-texto-carga="Guardando…">Guardar</button>
+                    <a class="btn btn-outline-secondary" href="@Url.Action("Vuelos", rv("vuelos"))">Cancelar</a>
+                </div>
+            </div>
+        }
+    }
+
+    if (!Model.Vuelos.Any())
+    {
+        <div class="estado-vacio tarjeta"><div class="alert alert-info d-inline-block" role="status"><strong>Información:</strong> No hay vuelos programados en el rango seleccionado. Use «Generar vuelos».</div></div>
+    }
+    else
+    {
+        <div class="tarjeta p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 tabla-apilada">
+                    <thead class="table-light">
+                        <tr><th scope="col">Código</th><th scope="col">Fecha</th><th scope="col">Ruta</th><th scope="col">Horario</th><th scope="col">Aeronave</th><th scope="col">Estado</th><th scope="col">Disp.</th><th scope="col" class="text-end">Acciones</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var f in Model.Vuelos)
+                        {
+                            var v = f.Vuelo;
+                            <tr class="@(Model.Editar == v.VueloId ? "table-active" : "")">
+                                <td data-label="Código" class="fw-semibold">@v.CodigoVuelo</td>
+                                <td data-label="Fecha">@Formato.FechaConDia(v.FechaOperacion)</td>
+                                <td data-label="Ruta">@v.Origen → @v.Destino</td>
+                                <td data-label="Horario">@Formato.Horario(v.HoraSalida, v.HoraLlegada)</td>
+                                <td data-label="Aeronave">@(f.Matricula ?? "Sin asignar")</td>
+                                <td data-label="Estado"><span class="@Formato.ClaseEstado(v.EstadoVueloCodigo)">@Formato.TextoEstadoVuelo(v.EstadoVueloCodigo)</span></td>
+                                <td data-label="Disponibles">@(f.Matricula == null || v.EstadoVueloCodigo == "CANCELADO" ? "—" : f.Disponibles + "/" + f.Capacidad)</td>
+                                <td class="text-end text-nowrap">
+                                    @if (v.EstadoVueloCodigo != "COMPLETADO")
+                                    {
+                                        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Vuelos", new { Tab = "vuelos", Desde = desde, Hasta = hasta, RutaId = Model.RutaId, Estado = Model.Estado, Editar = v.VueloId })#formEditarVuelo">Editar</a>
+                                    }
+                                    <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Disponibilidad", "Vuelos", new { id = v.VueloId })">Detalles</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p class="texto-ayuda mt-2">@Model.Vuelos.Count vuelo(s). Los vuelos completados no se modifican (historial).</p>
+    }
+}
+else if (Model.Tab == "frecuencias")
+{
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <p class="texto-ayuda mb-0">Itinerarios confirmados RN-04 a RN-06. Su modificación es exclusiva del SuperUsuario (CRUD de frecuencias).</p>
+        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Index", "Frecuencias")">Abrir CRUD de frecuencias</a>
+    </div>
+    <div class="tarjeta p-0">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 tabla-apilada">
+                <thead class="table-light"><tr><th scope="col">Día</th><th scope="col">Ruta</th><th scope="col">Horario</th><th scope="col">Estado</th></tr></thead>
+                <tbody>
+                    @foreach (var f in Model.Frecuencias)
+                    {
+                        <tr>
+                            <td data-label="Día">@Formato.NombreDia(f.DiaSemana)</td>
+                            <td data-label="Ruta">@f.Ruta.AeropuertoOrigen.Localidad → @f.Ruta.AeropuertoDestino.Localidad</td>
+                            <td data-label="Horario">@Formato.Horario(f.HoraSalida, f.HoraLlegada)</td>
+                            <td data-label="Estado"><span class="@(f.Activa ? "estado estado-ok" : "estado estado-neutro")">@(f.Activa ? "Activa" : "Inactiva")</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-end gap-2 mb-2">
+        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Index", "Itinerarios")">CRUD de itinerarios</a>
+        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Index", "TramosItinerario")">CRUD de tramos</a>
+    </div>
+    if (Model.Itinerarios == null || !Model.Itinerarios.Any())
+    {
+        <div class="estado-vacio tarjeta"><div class="alert alert-info d-inline-block" role="status"><strong>Información:</strong> No hay itinerarios con tramos en el rango seleccionado.</div></div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var it in Model.Itinerarios)
+            {
+                <div class="col-md-6">
+                    <div class="tarjeta h-100">
+                        <div class="d-flex justify-content-between gap-2">
+                            <h2 class="h6 mb-1">@it.Referencia</h2>
+                            <span class="@Formato.ClaseEstado(it.EstadoItinerarioCodigo)">@it.EstadoItinerarioCodigo</span>
+                        </div>
+                        <p class="texto-ayuda">@it.Nombre</p>
+                        <ol class="mb-0 small">
+                            @foreach (var t in it.Tramos.OrderBy(x => x.Orden))
+                            {
+                                <li>@(Model.CodigosVuelo != null && Model.CodigosVuelo.ContainsKey(t.VueloId) ? Model.CodigosVuelo[t.VueloId] : "Vuelo " + t.VueloId)</li>
+                            }
+                        </ol>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

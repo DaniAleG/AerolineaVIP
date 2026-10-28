@@ -1,0 +1,159 @@
+﻿@model ReportesVM
+@{
+    ViewBag.Title = "Consultas y reportes";
+}
+@* Pantalla 21. Consultas y reportes administrativos (tabulares, sin gráficos ni dashboard). *@
+<nav aria-label="Ruta de navegación"><ol class="breadcrumb">
+    <li class="breadcrumb-item">@Html.ActionLink("Administración", "Index")</li>
+    <li class="breadcrumb-item active" aria-current="page">Consultas y reportes</li>
+</ol></nav>
+<h1 class="h3">Consultas y reportes administrativos</h1>
+
+@using (Html.BeginForm("Reportes", "Admin", FormMethod.Get, new { id = "formReportes", @class = "tarjeta mb-3", novalidate = "novalidate" }))
+{
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            @Html.LabelFor(m => m.Consulta, new { @class = "form-label" }) <span class="req">*</span>
+            @Html.DropDownListFor(m => m.Consulta, Model.Consultas, new { @class = "form-select" })
+            @Html.ValidationMessageFor(m => m.Consulta)
+        </div>
+        <div class="col-6 col-md-4">
+            @Html.LabelFor(m => m.Desde, new { @class = "form-label" }) <span class="req">*</span>
+            @Html.TextBoxFor(m => m.Desde, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.Desde)
+        </div>
+        <div class="col-6 col-md-4">
+            @Html.LabelFor(m => m.Hasta, new { @class = "form-label" }) <span class="req">*</span>
+            @Html.TextBoxFor(m => m.Hasta, "{0:yyyy-MM-dd}", new { type = "date", @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.Hasta)
+        </div>
+        <div class="col-md-4">
+            @Html.LabelFor(m => m.RutaId, new { @class = "form-label" })
+            @Html.DropDownListFor(m => m.RutaId, Model.Rutas, "Todas", new { @class = "form-select" })
+        </div>
+        <div class="col-md-4">
+            @Html.LabelFor(m => m.AeronaveId, new { @class = "form-label" })
+            @Html.DropDownListFor(m => m.AeronaveId, Model.AeronavesLista, "Todas", new { @class = "form-select" })
+        </div>
+        <div class="col-md-4">
+            @Html.LabelFor(m => m.Estado, new { @class = "form-label" })
+            @Html.DropDownListFor(m => m.Estado, Model.Estados, new { @class = "form-select" })
+        </div>
+        <div class="col-12 d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary" data-texto-carga="Consultando…">Consultar</button>
+            @if (Model.Ejecutada)
+            {
+                <button type="submit" class="btn btn-outline-secondary">Actualizar resultados</button>
+            }
+            <span class="texto-ayuda align-self-center">«Exportar» solo se habilitará si se aprueba la función (fuera de esta entrega).</span>
+        </div>
+    </div>
+}
+
+@if (Model.Ejecutada)
+{
+    <p class="texto-ayuda">Datos con corte al @Formato.FechaHora(Model.Corte).</p>
+
+    if (Model.Consulta == "ocupacion")
+    {
+        <p class="small">Fuente: <code>vw_DisponibilidadVuelo</code>. Disponibles = Capacidad − Ocupados (asientos reservados u ocupados, RNP-03).</p>
+        if (!Model.Ocupacion.Any())
+        {
+            <div class="alert alert-info" role="status"><strong>Información:</strong> No hay resultados para los filtros seleccionados.</div>
+        }
+        else
+        {
+            <div class="tarjeta p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 tabla-apilada">
+                        <thead class="table-light"><tr><th scope="col">Vuelo</th><th scope="col">Fecha</th><th scope="col">Ruta</th><th scope="col">Aeronave</th><th scope="col">Capacidad</th><th scope="col">Ocupados</th><th scope="col">Disponibles</th><th scope="col">Estado</th></tr></thead>
+                        <tbody>
+                            @foreach (var o in Model.Ocupacion)
+                            {
+                                <tr>
+                                    <td data-label="Vuelo">@o.CodigoVuelo</td>
+                                    <td data-label="Fecha">@Formato.Fecha(o.FechaOperacion) @Formato.Hora(o.HoraSalida)</td>
+                                    <td data-label="Ruta">@o.Origen → @o.Destino</td>
+                                    <td data-label="Aeronave">@(o.Matricula ?? "Sin asignar")</td>
+                                    <td data-label="Capacidad">@o.Capacidad</td>
+                                    <td data-label="Ocupados">@o.Ocupados</td>
+                                    <td data-label="Disponibles">@o.Disponibles</td>
+                                    <td data-label="Estado"><span class="@Formato.ClaseEstado(o.EstadoVueloCodigo)">@Formato.TextoEstadoVuelo(o.EstadoVueloCodigo)</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr><th colspan="4" class="text-end">Totales</th><td>@Model.Ocupacion.Sum(o => o.Capacidad)</td><td>@Model.Ocupacion.Sum(o => o.Ocupados)</td><td>@Model.Ocupacion.Sum(o => o.Disponibles)</td><td></td></tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+    else if (Model.Consulta == "reservas")
+    {
+        <p class="small">Fuente: <code>Reserva</code> y <code>ReservaPasajeroVuelo</code>, por fecha de creación de la reserva. El importe es la suma de <code>ImporteTramo</code> (tarifas de ejemplo).</p>
+        if (!Model.ReservasLista.Any())
+        {
+            <div class="alert alert-info" role="status"><strong>Información:</strong> No hay resultados para los filtros seleccionados.</div>
+        }
+        else
+        {
+            <div class="tarjeta p-0">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light"><tr><th scope="col">Estado de la reserva</th><th scope="col">Reservas</th><th scope="col">Asignaciones de asiento</th><th scope="col" class="text-end">Importe</th></tr></thead>
+                    <tbody>
+                        @foreach (var f in Model.ReservasLista)
+                        {
+                            <tr>
+                                <td><span class="@Formato.ClaseEstado(f.Estado)">@Formato.TextoEstadoReserva(f.Estado)</span></td>
+                                <td>@f.Reservas</td>
+                                <td>@f.Asientos</td>
+                                <td class="text-end">@Formato.Dinero(f.Importe)</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot><tr><th>Total</th><td>@Model.ReservasLista.Sum(f => f.Reservas)</td><td>@Model.ReservasLista.Sum(f => f.Asientos)</td><td class="text-end">@Formato.Dinero(Model.ReservasLista.Sum(f => f.Importe))</td></tr></tfoot>
+                </table>
+            </div>
+        }
+    }
+    else
+    {
+        <p class="small">Fuente: <code>Compra</code> y <code>Pago</code> (pagos SIMULADOS). Una compra solo está pagada si tiene un pago aprobado.</p>
+        if (!Model.Compras.Any())
+        {
+            <div class="alert alert-info" role="status"><strong>Información:</strong> No hay resultados para los filtros seleccionados.</div>
+        }
+        else
+        {
+            <div class="tarjeta p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 tabla-apilada">
+                        <thead class="table-light"><tr><th scope="col">Reserva</th><th scope="col">Fecha de compra</th><th scope="col" class="text-end">Importe</th><th scope="col">Compra</th><th scope="col">Intentos</th><th scope="col">Último pago</th><th scope="col">Operación</th><th scope="col">Tarjeta</th></tr></thead>
+                        <tbody>
+                            @foreach (var c in Model.Compras)
+                            {
+                                <tr>
+                                    <td data-label="Reserva"><a href="@Url.Action("Gestionar", "Reservas", new { id = c.ReservaId })">@c.CodigoReserva</a></td>
+                                    <td data-label="Fecha">@Formato.FechaHora(c.FechaCompra)</td>
+                                    <td data-label="Importe" class="text-end">@Formato.Dinero(c.Importe, c.Moneda)</td>
+                                    <td data-label="Compra"><span class="@Formato.ClaseEstado(c.EstadoCompra)">@Formato.TextoEstadoCompra(c.EstadoCompra)</span></td>
+                                    <td data-label="Intentos">@c.Intentos</td>
+                                    <td data-label="Último pago"><span class="@Formato.ClaseEstado(c.UltimoPago)">@Formato.TextoEstadoPago(c.UltimoPago)</span></td>
+                                    <td data-label="Operación" class="small">@c.CodigoOperacion</td>
+                                    <td data-label="Tarjeta" class="small">@c.Marca</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot><tr><th colspan="2" class="text-end">Total pagado</th><td class="text-end">@Formato.Dinero(Model.Compras.Where(c => c.EstadoCompra == "PAGADA").Sum(c => c.Importe))</td><td colspan="5"></td></tr></tfoot>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+}
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

@@ -1,0 +1,203 @@
+﻿@model AdminGestionVM
+@{
+    ViewBag.Title = "Usuarios, pasajeros y reservas";
+}
+@* Pantalla 20. Gestión de usuarios, pasajeros y reservas. *@
+@if (Model.PuedeVerUsuarios)
+{
+    <nav aria-label="Ruta de navegación"><ol class="breadcrumb">
+        <li class="breadcrumb-item">@Html.ActionLink("Administración", "Index")</li>
+        <li class="breadcrumb-item active" aria-current="page">Usuarios, pasajeros y reservas</li>
+    </ol></nav>
+}
+<h1 class="h3">Gestión de usuarios, pasajeros y reservas</h1>
+@if (!Model.PuedeVerUsuarios)
+{
+    <p class="text-muted small">Empleado de counter: consulta autorizada de pasajeros y reservas para asistir al cliente (DP-13).</p>
+}
+
+<ul class="nav nav-tabs mb-3">
+    @if (Model.PuedeVerUsuarios)
+    {
+        <li class="nav-item"><a class="nav-link @(Model.Tab == "usuarios" ? "active" : "")" href="@Url.Action("Gestion", new { tab = "usuarios" })">Usuarios</a></li>
+    }
+    <li class="nav-item"><a class="nav-link @(Model.Tab == "pasajeros" ? "active" : "")" href="@Url.Action("Gestion", new { tab = "pasajeros" })">Pasajeros</a></li>
+    <li class="nav-item"><a class="nav-link @(Model.Tab == "reservas" ? "active" : "")" href="@Url.Action("Gestion", new { tab = "reservas" })">Reservas</a></li>
+</ul>
+
+@using (Html.BeginForm("Gestion", "Admin", FormMethod.Get, new { id = "formGestion", @class = "tarjeta mb-3" }))
+{
+    <input type="hidden" name="tab" value="@Model.Tab" />
+    <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+            @Html.LabelFor(m => m.Buscar, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.Buscar, new { @class = "form-control", placeholder = Model.Tab == "usuarios" ? "usuario, correo, nombre…" : Model.Tab == "pasajeros" ? "documento, nombre, correo…" : "código RV…, usuario o documento" })
+        </div>
+        @if (Model.Tab == "usuarios")
+        {
+            <div class="col-md-4">
+                @Html.LabelFor(m => m.Rol, new { @class = "form-label" })
+                @Html.DropDownListFor(m => m.Rol, Model.Roles, new { @class = "form-select" })
+            </div>
+        }
+        @if (Model.Tab == "reservas")
+        {
+            <div class="col-md-4">
+                @Html.LabelFor(m => m.Estado, new { @class = "form-label" })
+                @Html.DropDownListFor(m => m.Estado, Model.Estados, new { @class = "form-select" })
+            </div>
+        }
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-outline-primary">Consultar</button>
+            @if (Model.Tab == "usuarios" && Model.EsSuperUsuario)
+            {
+                <a class="btn btn-primary" href="@Url.Action("Register", "Account")">Crear</a>
+            }
+            @if (Model.Tab == "pasajeros" && Model.PuedeVerUsuarios)
+            {
+                <a class="btn btn-primary" href="@Url.Action("Create", "Pasajeros")">Crear</a>
+            }
+        </div>
+    </div>
+}
+
+@if (Model.Tab == "usuarios")
+{
+    if (!Model.EsSuperUsuario)
+    {
+        <div class="alert alert-info py-2" role="status"><strong>Error de acceso:</strong> Solo el SuperUsuario puede asignar roles. Un Administrador no edita cuentas con privilegios elevados.</div>
+    }
+    if (!Model.Usuarios.Any())
+    {
+        <div class="estado-vacio tarjeta"><div class="alert alert-info d-inline-block" role="status"><strong>Información:</strong> No se encontraron registros.</div></div>
+    }
+    else
+    {
+        <div class="tarjeta p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 tabla-apilada">
+                    <thead class="table-light"><tr><th scope="col">Usuario</th><th scope="col">Nombre</th><th scope="col">Correo</th><th scope="col">Rol</th><th scope="col">Estado</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+                    <tbody>
+                        @foreach (var u in Model.Usuarios)
+                        {
+                            var puedeEditar = Model.EsSuperUsuario || !u.EsElevado;
+                            <tr>
+                                <td data-label="Usuario" class="fw-semibold">@u.UserName</td>
+                                <td data-label="Nombre">@u.NombreCompleto</td>
+                                <td data-label="Correo">@u.Email</td>
+                                <td data-label="Rol">@string.Join(", ", u.Roles.Select(RolesApp.Descripcion))</td>
+                                <td data-label="Estado"><span class="@(u.Bloqueado ? "estado estado-error" : "estado estado-ok")">@(u.Bloqueado ? "Bloqueado" : "Activo")</span></td>
+                                <td class="text-end">
+                                    <div class="d-flex flex-wrap gap-1 justify-content-end">
+                                        @if (puedeEditar)
+                                        {
+                                            <a class="btn btn-sm btn-outline-primary" href="@Url.Action("EditarUsuario", new { id = u.Id })">Editar</a>
+                                        }
+                                        @if (u.Roles.Contains(RolesApp.Cliente))
+                                        {
+                                            <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Gestion", new { tab = "reservas", Buscar = u.UserName })">Revisar historial</a>
+                                        }
+                                        @if (puedeEditar && u.Id != ViewBag.UsuarioActual)
+                                        {
+                                            using (Html.BeginForm("CambiarEstadoUsuario", "Admin", new { id = u.Id }, FormMethod.Post, new { @class = "d-inline" }))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm @(u.Bloqueado ? "btn-outline-success" : "btn-outline-danger")">@(u.Bloqueado ? "Activar" : "Bloquear")</button>
+                                            }
+                                        }
+                                        @if (Model.EsSuperUsuario)
+                                        {
+                                            using (Html.BeginForm("AsignarRol", "Admin", new { id = u.Id }, FormMethod.Post, new { @class = "d-inline-flex gap-1" }))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                <label class="visually-hidden" for="rol_@u.Id">Rol de @u.UserName</label>
+                                                <select id="rol_@u.Id" name="rol" class="form-select form-select-sm" style="width:auto">
+                                                    @foreach (var r in RolesApp.Lista)
+                                                    {
+                                                        <option value="@r" selected="@(u.Roles.Contains(r) ? "selected" : null)">@RolesApp.Descripcion(r)</option>
+                                                    }
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-primary">Asignar rol</button>
+                                            }
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+else if (Model.Tab == "pasajeros")
+{
+    if (!Model.Pasajeros.Any())
+    {
+        <div class="estado-vacio tarjeta"><div class="alert alert-info d-inline-block" role="status"><strong>Información:</strong> No se encontraron registros.</div></div>
+    }
+    else
+    {
+        <div class="tarjeta p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 tabla-apilada">
+                    <thead class="table-light"><tr><th scope="col">Documento</th><th scope="col">Pasajero</th><th scope="col">Correo</th><th scope="col">Teléfono</th><th scope="col">Reservas</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+                    <tbody>
+                        @foreach (var f in Model.Pasajeros)
+                        {
+                            var p = f.Pasajero;
+                            <tr>
+                                <td data-label="Documento">@ServicioReservas.Documento(p.TipoDocumentoCodigo, p.NumeroDocumento)</td>
+                                <td data-label="Pasajero">@p.Apellidos, @p.Nombres</td>
+                                <td data-label="Correo">@p.Correo</td>
+                                <td data-label="Teléfono">@p.Telefono</td>
+                                <td data-label="Reservas">@f.Reservas</td>
+                                <td class="text-end text-nowrap">
+                                    <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Details", "Pasajeros", new { id = p.PasajeroId })">Detalles</a>
+                                    @if (Model.PuedeVerUsuarios)
+                                    {
+                                        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Edit", "Pasajeros", new { id = p.PasajeroId })">Editar</a>
+                                        <a class="btn btn-sm btn-outline-danger" href="@Url.Action("Delete", "Pasajeros", new { id = p.PasajeroId })">Eliminar</a>
+                                    }
+                                    <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Gestion", new { tab = "reservas", Buscar = p.NumeroDocumento })">Reservas</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+else
+{
+    if (!Model.Reservas.Any())
+    {
+        <div class="estado-vacio tarjeta"><div class="alert alert-info d-inline-block" role="status"><strong>Información:</strong> No se encontraron registros.</div></div>
+    }
+    else
+    {
+        <div class="tarjeta p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 tabla-apilada">
+                    <thead class="table-light"><tr><th scope="col">Código</th><th scope="col">Titular</th><th scope="col">Fecha de viaje</th><th scope="col">Ruta</th><th scope="col">Pax</th><th scope="col">Reserva</th><th scope="col">Compra</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+                    <tbody>
+                        @foreach (var f in Model.Reservas)
+                        {
+                            <tr>
+                                <td data-label="Código" class="fw-semibold">@f.CodigoReserva</td>
+                                <td data-label="Titular">@f.Usuario</td>
+                                <td data-label="Fecha de viaje">@Formato.Fecha(f.FechaViaje)</td>
+                                <td data-label="Ruta">@f.Ruta</td>
+                                <td data-label="Pasajeros">@f.Pasajeros</td>
+                                <td data-label="Reserva"><span class="@Formato.ClaseEstado(f.EstadoReserva)">@Formato.TextoEstadoReserva(f.EstadoReserva)</span></td>
+                                <td data-label="Compra"><span class="@Formato.ClaseEstado(f.EstadoCompra)">@Formato.TextoEstadoCompra(f.EstadoCompra)</span></td>
+                                <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Gestionar", "Reservas", new { id = f.ReservaId })">Detalle / gestionar</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

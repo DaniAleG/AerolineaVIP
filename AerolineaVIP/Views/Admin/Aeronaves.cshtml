@@ -1,0 +1,109 @@
+﻿@model AdminAeronavesVM
+@{
+    ViewBag.Title = "Aeronaves";
+}
+@* Pantalla 19. Administración de aeronaves. *@
+<nav aria-label="Ruta de navegación"><ol class="breadcrumb">
+    <li class="breadcrumb-item">@Html.ActionLink("Administración", "Index")</li>
+    <li class="breadcrumb-item active" aria-current="page">Aeronaves</li>
+</ol></nav>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <h1 class="h3 mb-0">Administración de aeronaves</h1>
+    <a class="btn btn-outline-primary btn-sm" href="@Url.Action("Index", "Aeronaves")">CRUD de aeronaves</a>
+</div>
+<p class="texto-ayuda">RN-01: la flota inicial consta de tres jets; registrar aeronaves adicionales requiere aprobación (solo SuperUsuario).</p>
+
+@if (!Model.Flota.Any())
+{
+    <div class="estado-vacio tarjeta"><div class="alert alert-info d-inline-block" role="status"><strong>Información:</strong> No hay aeronaves registradas.</div></div>
+}
+else
+{
+    <div class="tarjeta p-0 mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 tabla-apilada">
+                <thead class="table-light"><tr><th scope="col">Identificador</th><th scope="col">Modelo</th><th scope="col">Capacidad</th><th scope="col">Estado</th><th scope="col">Vuelos próximos</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+                <tbody>
+                    @foreach (var f in Model.Flota)
+                    {
+                        var a = f.Aeronave;
+                        <tr class="@(Model.Edicion != null && Model.Edicion.AeronaveId == a.AeronaveId ? "table-active" : "")">
+                            <td data-label="Identificador" class="fw-semibold">@a.Matricula</td>
+                            <td data-label="Modelo">@a.ModeloAeronave.Fabricante @a.ModeloAeronave.Nombre</td>
+                            <td data-label="Capacidad">@a.ModeloAeronave.CapacidadAsientos</td>
+                            <td data-label="Estado"><span class="@Formato.ClaseEstado(a.EstadoAeronaveCodigo)">@a.EstadoAeronave.Descripcion</span></td>
+                            <td data-label="Vuelos próximos">@f.VuelosProximos</td>
+                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Aeronaves", new { id = a.AeronaveId })#edicion">Consultar / Modificar estado</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (Model.Edicion != null)
+{
+    <div class="row g-4" id="edicion">
+        <div class="col-lg-5">
+            @using (Html.BeginForm("Aeronaves", "Admin", FormMethod.Post, new { @class = "tarjeta", novalidate = "novalidate" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Edicion.AeronaveId)
+                <h2 class="h5">Editar @Model.Edicion.Matricula</h2>
+                @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Edicion.Matricula, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.TextBoxFor(m => m.Edicion.Matricula, new { @class = "form-control", maxlength = 15, style = "text-transform:uppercase" })
+                    @Html.ValidationMessageFor(m => m.Edicion.Matricula)
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Edicion.ModeloAeronaveId, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.DropDownListFor(m => m.Edicion.ModeloAeronaveId, Model.Modelos, new { @class = "form-select" })
+                    @Html.ValidationMessageFor(m => m.Edicion.ModeloAeronaveId)
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Edicion.Capacidad, new { @class = "form-label" })
+                    <input class="form-control" value="@Model.Edicion.Capacidad" readonly aria-readonly="true" id="capacidad" />
+                    <div class="texto-ayuda">Solo lectura: proviene del modelo (máximo 7, RN-03).</div>
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Edicion.EstadoAeronaveCodigo, new { @class = "form-label" }) <span class="req">*</span>
+                    @Html.DropDownListFor(m => m.Edicion.EstadoAeronaveCodigo, Model.Estados, new { @class = "form-select" })
+                    @Html.ValidationMessageFor(m => m.Edicion.EstadoAeronaveCodigo)
+                    <div class="texto-ayuda">Una aeronave «No disponible» no recibe nuevas asignaciones (trigger).</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" data-texto-carga="Guardando…">Guardar</button>
+                    <a class="btn btn-outline-secondary" href="@Url.Action("Aeronaves")">Cancelar</a>
+                </div>
+            }
+        </div>
+        <div class="col-lg-7">
+            <div class="tarjeta mb-3">
+                <h2 class="tarjeta-titulo">Distribución (solo lectura)</h2>
+                @Html.Partial("_MapaAsientos", Model.Distribucion)
+            </div>
+            <div class="tarjeta">
+                <h2 class="tarjeta-titulo">Próximas asignaciones</h2>
+                @if (!Model.Asignaciones.Any())
+                {
+                    <p class="texto-ayuda mb-0">Sin vuelos asignados desde hoy.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled small mb-0">
+                        @foreach (var v in Model.Asignaciones)
+                        {
+                            <li class="mb-1">@v.CodigoVuelo · @Formato.FechaConDia(v.FechaOperacion) · @v.Origen → @v.Destino · @Formato.Horario(v.HoraSalida, v.HoraLlegada) · <span class="@Formato.ClaseEstado(v.EstadoVueloCodigo)">@Formato.TextoEstadoVuelo(v.EstadoVueloCodigo)</span></li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

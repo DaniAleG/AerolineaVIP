@@ -1,0 +1,62 @@
+﻿@{
+    ViewBag.Title = "Mantenimiento de tablas";
+    var esSuper = User.IsInRole(RolesApp.SuperUsuario);
+    var grupos = new[]
+    {
+        new { Grupo = "Operación aérea", Items = new[]
+        {
+            new { C = "Aeropuertos", T = "Aeropuertos", Admin = "Consulta", Super = "CRUD completo" },
+            new { C = "Rutas", T = "Rutas y tarifas", Admin = "Consulta", Super = "CRUD completo" },
+            new { C = "Frecuencias", T = "Frecuencias aprobadas", Admin = "Consulta", Super = "CRUD completo" },
+            new { C = "VuelosCrud", T = "Vuelos (registro)", Admin = "Crear y editar", Super = "CRUD completo" },
+            new { C = "Itinerarios", T = "Itinerarios", Admin = "Crear y editar", Super = "CRUD completo" },
+            new { C = "TramosItinerario", T = "Tramos de itinerario", Admin = "CRUD completo", Super = "CRUD completo" }
+        }},
+        new { Grupo = "Flota", Items = new[]
+        {
+            new { C = "ModelosAeronave", T = "Modelos de aeronave", Admin = "Consulta", Super = "CRUD completo" },
+            new { C = "Asientos", T = "Distribución de asientos (DP-11)", Admin = "Consulta", Super = "CRUD completo" },
+            new { C = "Aeronaves", T = "Aeronaves", Admin = "Editar", Super = "CRUD completo" }
+        }},
+        new { Grupo = "Clientes y transacciones", Items = new[]
+        {
+            new { C = "Pasajeros", T = "Pasajeros", Admin = "CRUD completo", Super = "CRUD completo" },
+            new { C = "MetodosPago", T = "Métodos de pago (simulación)", Admin = "Consulta", Super = "CRUD completo" },
+            new { C = "MarcasTarjeta", T = "Marcas de tarjeta (simulación)", Admin = "Consulta", Super = "CRUD completo" },
+            new { C = "Monedas", T = "Monedas", Admin = "Consulta", Super = "CRUD completo" },
+            new { C = "TiposDocumento", T = "Tipos de documento", Admin = "Consulta", Super = "CRUD completo" },
+            new { C = "DatosEmisor", T = "Datos del emisor", Admin = "Consulta", Super = "Editar" }
+        }}
+    };
+}
+<nav aria-label="Ruta de navegación"><ol class="breadcrumb">
+    <li class="breadcrumb-item">@Html.ActionLink("Administración", "Index")</li>
+    <li class="breadcrumb-item active" aria-current="page">Mantenimientos</li>
+</ol></nav>
+<h1 class="h3">Mantenimiento de tablas</h1>
+<p class="text-muted">CRUD generados con scaffolding (controlador MVC 5 con vistas que usan Entity Framework) y ajustados al layout del proyecto. Los permisos se verifican en el servidor con <code>[Authorize(Roles = ...)]</code>.</p>
+<p class="small">Los catálogos de estados (reserva, asignación, compra, pago, vuelo, check-in, comprobante) no se editan desde la interfaz: sus códigos gobiernan las transiciones del sistema y los triggers de la base.</p>
+
+@foreach (var g in grupos)
+{
+    <h2 class="h5 mt-4">@g.Grupo</h2>
+    <div class="tarjeta p-0">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 tabla-apilada">
+                <thead class="table-light"><tr><th scope="col">Tabla</th><th scope="col">Administrador</th><th scope="col">SuperUsuario</th><th scope="col" class="text-end">Acceso</th></tr></thead>
+                <tbody>
+                    @foreach (var i in g.Items)
+                    {
+                        <tr>
+                            <td data-label="Tabla">@i.T</td>
+                            <td data-label="Administrador">@i.Admin</td>
+                            <td data-label="SuperUsuario">@i.Super</td>
+                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Index", i.C)">Abrir</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+<p class="small text-muted mt-3">Su rol actual: <strong>@(esSuper ? "SuperUsuario" : "Administrador")</strong>.</p>
