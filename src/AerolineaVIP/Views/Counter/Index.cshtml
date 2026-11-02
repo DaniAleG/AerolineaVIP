@@ -1,0 +1,120 @@
+﻿@model CounterViewModels
+@{
+    ViewBag.Title = "Atención en counter";
+}
+@* MOD-09. Atención en counter: búsqueda de reservas y vuelos próximos. *@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <h1 class="h3 mb-0">Atención en counter</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary" href="@Url.Action("Gestion", "Admin", new { tab = "pasajeros" })">Pasajeros</a>
+        <a class="btn btn-primary" href="@Url.Action("Buscar", "Vuelos")">Nueva reserva para un cliente</a>
+    </div>
+</div>
+<p class="text-muted small">Busque la reserva del cliente para revisar su estado, cambiar asientos, cobrar, hacer el check-in o imprimir comprobantes. Toda operación se registra en el sistema central.</p>
+
+@using (Html.BeginForm("Index", "Counter", FormMethod.Get, new { id = "formCounter", @class = "tarjeta mb-3", novalidate = "novalidate" }))
+{
+    <div class="row g-3 align-items-end">
+        <div class="col-md-8">
+            @Html.LabelFor(m => m.Buscar, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.Buscar, new { @class = "form-control", placeholder = "RV00000001, cédula, apellido del pasajero o usuario del cliente", maxlength = 100, autofocus = "autofocus" })
+            @Html.ValidationMessageFor(m => m.Buscar)
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-outline-primary" data-texto-carga="Buscando…">Buscar</button>
+            <a class="btn btn-outline-secondary" href="@Url.Action("Index")">Limpiar filtros</a>
+        </div>
+    </div>
+}
+
+@if (Model.Buscado)
+{
+    <section class="mb-4" aria-labelledby="tituloResultados">
+        <h2 id="tituloResultados" class="h5">Reservas encontradas (@Model.Reservas.Count)</h2>
+        @if (!Model.Reservas.Any())
+        {
+            <div class="alert alert-info" role="status"><strong>Información:</strong> No se encontraron reservas con «@Model.Buscar».</div>
+        }
+        else
+        {
+            <div class="tarjeta p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 tabla-apilada">
+                        <thead class="table-light">
+                            <tr><th scope="col">Código</th><th scope="col">Cliente</th><th scope="col">Viaje</th><th scope="col">Ruta</th><th scope="col">Pasajeros</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var f in Model.Reservas)
+                            {
+                                <tr>
+                                    <td data-label="Código" class="fw-bold">@f.CodigoReserva</td>
+                                    <td data-label="Cliente">@f.Usuario</td>
+                                    <td data-label="Viaje">@Formato.Fecha(f.FechaViaje)</td>
+                                    <td data-label="Ruta">@f.Ruta</td>
+                                    <td data-label="Pasajeros">@f.Pasajeros</td>
+                                    <td data-label="Estado">
+                                        <span class="@Formato.ClaseEstado(f.EstadoReserva)">@Formato.TextoEstadoReserva(f.EstadoReserva)</span>
+                                        @if (f.FechaExpiracion.HasValue)
+                                        {<span class="texto-ayuda d-block">Vence @Formato.FechaHora(f.FechaExpiracion)</span>}
+                                    </td>
+                                    <td data-label="Acciones">
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <a class="btn btn-sm btn-primary" href="@Url.Action("Gestionar", "Reservas", new { id = f.ReservaId })">Atender</a>
+                                            @if (f.PuedePagar)
+                                            {
+                                                <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Pagar", "Compras", new { id = f.ReservaId })">Cobrar</a>
+                                            }
+                                            @if (f.EstadoReserva == "CONFIRMADA")
+                                            {
+                                                <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Index", "CheckIn", new { codigo = f.CodigoReserva })">Check-in</a>
+                                            }
+                                            <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", "Comprobantes", new { Buscar = f.CodigoReserva })">Comprobantes</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </section>
+}
+
+<section aria-labelledby="tituloVuelos">
+    <h2 id="tituloVuelos" class="h5">Vuelos de hoy y mañana</h2>
+    @if (!Model.VuelosProximos.Any())
+    {
+        <div class="alert alert-info" role="status"><strong>Información:</strong> No hay vuelos programados para hoy ni mañana.</div>
+    }
+    else
+    {
+        <div class="tarjeta p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 tabla-apilada">
+                    <thead class="table-light">
+                        <tr><th scope="col">Vuelo</th><th scope="col">Fecha y hora</th><th scope="col">Ruta</th><th scope="col">Aeronave</th><th scope="col">Disponibles</th><th scope="col">Estado</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var v in Model.VuelosProximos)
+                        {
+                            <tr>
+                                <td data-label="Vuelo" class="fw-bold">@v.CodigoVuelo</td>
+                                <td data-label="Fecha y hora">@Formato.Fecha(v.FechaOperacion) @Formato.Hora(v.HoraSalida)</td>
+                                <td data-label="Ruta">@v.Origen → @v.Destino</td>
+                                <td data-label="Aeronave">@(v.Matricula ?? "Sin asignar")</td>
+                                <td data-label="Disponibles">@v.Disponibles de @v.Capacidad</td>
+                                <td data-label="Estado"><span class="@Formato.ClaseEstado(v.EstadoVueloCodigo)">@Formato.TextoEstadoVuelo(v.EstadoVueloCodigo)</span></td>
+                                <td data-label="Acciones"><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Disponibilidad", "Vuelos", new { id = v.VueloId })">Ver asientos</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</section>
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

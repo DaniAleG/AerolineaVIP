@@ -175,6 +175,7 @@
     <Compile Include="Controllers\ComprasController.cs" />
     <Compile Include="Controllers\ComprobantesController.cs" />
     <Compile Include="Controllers\ControladorBase.cs" />
+    <Compile Include="Controllers\CounterController.cs" />
     <Compile Include="Controllers\DatosEmisorController.cs" />
     <Compile Include="Controllers\FrecuenciasController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -208,6 +209,7 @@
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\ViewModels\AdminViewModels.cs" />
     <Compile Include="Models\ViewModels\ComprasViewModels.cs" />
+    <Compile Include="Models\ViewModels\CounterViewModels.cs" />
     <Compile Include="Models\ViewModels\ReservasViewModels.cs" />
     <Compile Include="Models\ViewModels\VuelosViewModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -394,6 +396,7 @@
     <Content Include="Views\TiposDocumento\Details.cshtml" />
     <Content Include="Views\TiposDocumento\Edit.cshtml" />
     <Content Include="Views\TiposDocumento\Index.cshtml" />
+    <Content Include="Views\Counter\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
