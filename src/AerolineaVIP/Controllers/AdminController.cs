@@ -507,7 +507,7 @@ namespace AerolineaVIP.Controllers
         }
 
         // ----- Pantalla 21: consultas y reportes -----
-        public ActionResult Reportes(ReportesVM vm)
+        public ActionResult Reportes(ReportesVM vm, string formato)
         {
             vm.Consultas = new SelectList(new[]
             {
@@ -601,7 +601,40 @@ namespace AerolineaVIP.Controllers
                         Marca = c.Ultimo == null ? null : c.Ultimo.Marca + " **** " + c.Ultimo.UltimosCuatroDigitos
                     }).ToList();
             }
-            return View(vm);
+            return formato == "csv" ? ExportarCsv(vm) : View(vm);
+        }
+
+        /// <summary>Descarga el reporte consultado como CSV (se abre en Excel).</summary>
+        private ActionResult ExportarCsv(ReportesVM vm)
+        {
+            var c = Formato.Cultura;
+            var sb = new System.Text.StringBuilder();
+            Func<string, string> campo = t => "\"" + (t ?? "").Replace("\"", "\"\"") + "\"";
+            sb.AppendLine("Reporte;" + campo(vm.Consulta) + ";Desde;" + Formato.Fecha(vm.Desde) + ";Hasta;" + Formato.Fecha(vm.Hasta) + ";Corte;" + Formato.FechaHora(vm.Corte));
+
+            if (vm.Consulta == "ocupacion")
+            {
+                sb.AppendLine("Vuelo;Fecha;Salida;Origen;Destino;Aeronave;Capacidad;Ocupados;Disponibles;Estado");
+                foreach (var o in vm.Ocupacion)
+                    sb.AppendLine(string.Join(";", campo(o.CodigoVuelo), Formato.Fecha(o.FechaOperacion), Formato.Hora(o.HoraSalida), campo(o.Origen), campo(o.Destino),
+                        campo(o.Matricula ?? "Sin asignar"), o.Capacidad, o.Ocupados, o.Disponibles, campo(o.EstadoVueloCodigo)));
+            }
+            else if (vm.Consulta == "reservas")
+            {
+                sb.AppendLine("Estado;Reservas;Asientos;Importe");
+                foreach (var r in vm.ReservasLista)
+                    sb.AppendLine(string.Join(";", campo(r.Estado), r.Reservas, r.Asientos, r.Importe.ToString("0.00", c)));
+            }
+            else
+            {
+                sb.AppendLine("Reserva;Fecha de compra;Importe;Moneda;Estado de compra;Intentos;Último pago;Operación;Tarjeta");
+                foreach (var r in vm.Compras)
+                    sb.AppendLine(string.Join(";", campo(r.CodigoReserva), Formato.FechaHora(r.FechaCompra), r.Importe.ToString("0.00", c), campo(r.Moneda),
+                        campo(r.EstadoCompra), r.Intentos, campo(r.UltimoPago), campo(r.CodigoOperacion), campo(r.Marca)));
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return File(bytes, "text/csv", "Reporte_" + vm.Consulta + "_" + DateTime.Now.ToString("yyyyMMdd_HHmm") + ".csv");
         }
     }
 }
