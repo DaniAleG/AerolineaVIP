@@ -103,6 +103,25 @@ namespace AerolineaVIP.Models.ViewModels
         }
     }
 
+    /// <summary>Pase de abordar de un pasajero con check-in completado (MOD-07).</summary>
+    public class PaseAbordarVM
+    {
+        public string CodigoReserva { get; set; }
+        public string Pasajero { get; set; }
+        public string Documento { get; set; }
+        public string CodigoVuelo { get; set; }
+        public string Origen { get; set; }
+        public string CiudadOrigen { get; set; }
+        public string Destino { get; set; }
+        public string CiudadDestino { get; set; }
+        public DateTime Salida { get; set; }
+        public DateTime Llegada { get; set; }
+        public string Asiento { get; set; }
+        public string Matricula { get; set; }
+        public DateTime FechaCheckIn { get; set; }
+        public DateTime CierreEmbarque { get; set; }
+    }
+
     // ----- Comprobantes (16) -----
     public class LineaComprobanteVM
     {

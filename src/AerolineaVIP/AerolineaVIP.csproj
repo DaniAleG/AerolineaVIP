@@ -397,6 +397,7 @@
     <Content Include="Views\TiposDocumento\Edit.cshtml" />
     <Content Include="Views\TiposDocumento\Index.cshtml" />
     <Content Include="Views\Counter\Index.cshtml" />
+    <Content Include="Views\CheckIn\Pase.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
