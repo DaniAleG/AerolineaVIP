@@ -600,12 +600,71 @@ UPDATE c SET c.EstadoCompraCodigo = 'ANULADA'
                             Documento = Documento(a.Pasajero.TipoDocumentoCodigo, a.Pasajero.NumeroDocumento),
                             Asiento = codigos.TryGetValue(a.VueloId + "|" + a.NumeroAsiento, out codigo) ? codigo : "N.º " + a.NumeroAsiento,
                             Importe = a.ImporteTramo,
+                            VueloId = a.VueloId,
+                            NumeroAsiento = a.NumeroAsiento,
                             EstadoAsignacion = a.EstadoAsignacionCodigo,
                             CheckIn = check == null ? null : check.EstadoCheckInCodigo
                         };
                     }).ToList()
             };
             return vm;
+        }
+
+        // ----- Cambio de asiento (MOD-09) -----
+
+        /// <summary>Motivo por el que no se puede cambiar el asiento de una línea, o null si se puede.</summary>
+        private static string MotivoNoCambio(Reserva r, LineaReservaVM l, DateTime ahora)
+        {
+            if (r.EstadoReservaCodigo != "PENDIENTE" && r.EstadoReservaCodigo != "CONFIRMADA") return "La reserva no está vigente.";
+            if (!EstadosOcupan.Contains(l.EstadoAsignacion)) return "El asiento ya no está vigente.";
+            if (l.CheckIn == "COMPLETADO") return "El pasajero ya hizo el check-in.";
+            if (l.SalidaProgramada <= ahora.AddHours(Politicas.HorasCierreCheckIn)) return "El vuelo sale pronto; ya no se pueden cambiar asientos.";
+            return null;
+        }
+
+        /// <summary>Marca qué líneas admiten cambio de asiento y carga los asientos libres de cada vuelo.</summary>
+        public void PrepararCambioAsiento(DetalleReservaVM vm)
+        {
+            var ahora = Politicas.Ahora;
+            var mapas = new Dictionary<int, List<AsientoVM>>();
+            foreach (var l in vm.Lineas)
+            {
+                l.PuedeCambiarAsiento = MotivoNoCambio(vm.Reserva, l, ahora) == null;
+                if (!l.PuedeCambiarAsiento) continue;
+                if (!mapas.ContainsKey(l.VueloId)) mapas[l.VueloId] = Mapa(l.VueloId);
+                l.AsientosLibres = mapas[l.VueloId].Where(a => a.EstadoVisual == "DISPONIBLE").ToList();
+                if (!l.AsientosLibres.Any()) l.PuedeCambiarAsiento = false;
+            }
+        }
+
+        /// <summary>Cambia el asiento de una asignación. Devuelve null si todo salió bien o el motivo del rechazo.</summary>
+        public string CambiarAsiento(int reservaId, int asignacionId, byte nuevoAsiento)
+        {
+            ExpirarVencidas(true);
+            var r = CargarReserva(reservaId);
+            if (r == null) return "No se encontró la reserva.";
+            var vm = Detalle(r);
+            var linea = vm.Lineas.FirstOrDefault(l => l.AsignacionId == asignacionId);
+            if (linea == null) return "El asiento no pertenece a esta reserva.";
+            if (linea.NumeroAsiento == nuevoAsiento) return "Seleccione un asiento distinto al actual.";
+            var motivo = MotivoNoCambio(r, linea, Politicas.Ahora);
+            if (motivo != null) return motivo;
+
+            var libre = Mapa(linea.VueloId).Any(a => a.NumeroAsiento == nuevoAsiento && a.EstadoVisual == "DISPONIBLE");
+            if (!libre) return "El asiento elegido ya no está disponible. Elija otro.";
+
+            try
+            {
+                var asignacion = r.Asignaciones.First(a => a.AsignacionId == asignacionId);
+                asignacion.NumeroAsiento = nuevoAsiento;
+                db.SaveChanges();
+                return null;
+            }
+            catch (Exception ex)
+            {
+                // El índice único de la base impide que dos pasajeros queden en el mismo asiento.
+                return ErroresBD.Mensaje(ex);
+            }
         }
 
         // ----- Cancelación (DP-08) -----
