@@ -44,9 +44,10 @@ else
                 <td>@(item.Correo)</td>
                 <td>@(item.Telefono)</td>
                 <td class="text-end text-nowrap">
-                    @if ((User.IsInRole(AerolineaVIP.RolesApp.SuperUsuario) || User.IsInRole(AerolineaVIP.RolesApp.Administrador))) { @Html.ActionLink("Editar", "Edit", new { id = item.PasajeroId }, new { @class = "btn btn-sm btn-outline-primary" }) }
+                    @Html.ActionLink("Editar", "Edit", new { id = item.PasajeroId }, new { @class = "btn btn-sm btn-outline-primary" })
                     @Html.ActionLink("Detalles", "Details", new { id = item.PasajeroId }, new { @class = "btn btn-sm btn-outline-secondary" })
-                    @if ((User.IsInRole(AerolineaVIP.RolesApp.SuperUsuario) || User.IsInRole(AerolineaVIP.RolesApp.Administrador))) { @Html.ActionLink("Eliminar", "Delete", new { id = item.PasajeroId }, new { @class = "btn btn-sm btn-outline-danger" }) }
+                    @if ((User.IsInRole(AerolineaVIP.RolesApp.SuperUsuario) || User.IsInRole(AerolineaVIP.RolesApp.Administrador)))
+                    {@Html.ActionLink("Eliminar", "Delete", new { id = item.PasajeroId }, new { @class = "btn btn-sm btn-outline-danger" })}
                 </td>
             </tr>
 }

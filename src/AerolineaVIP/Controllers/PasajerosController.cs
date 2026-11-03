@@ -15,8 +15,15 @@ namespace AerolineaVIP.Controllers
     {
         private readonly AerolineaVIPEntities db = new AerolineaVIPEntities();
 
+        /// <summary>El empleado de counter solo puede actualizar los datos de contacto.</summary>
+        private bool SoloContacto
+        {
+            get { return !User.IsInRole(RolesApp.SuperUsuario) && !User.IsInRole(RolesApp.Administrador); }
+        }
+
         private void CargarListas(Pasajero e)
         {
+            ViewBag.SoloContacto = SoloContacto;
             ViewBag.TipoDocumentoCodigo = new SelectList(db.TipoDocumentoIdentidad.ToList(), "Codigo", "Descripcion", e == null ? null : e.TipoDocumentoCodigo);
         }
 
@@ -71,8 +78,7 @@ namespace AerolineaVIP.Controllers
             return View(e);
         }
 
-        // GET: Pasajeros/Edit
-        [Authorize(Roles = RolesApp.Administracion)]
+        // GET: Pasajeros/Edit (el counter solo actualiza el contacto)
         public ActionResult Edit(int? id)
         {
             if (!id.HasValue) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
@@ -85,14 +91,16 @@ namespace AerolineaVIP.Controllers
         // POST: Pasajeros/Edit
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = RolesApp.Administracion)]
         public ActionResult EditPost(int? id)
         {
             if (!id.HasValue) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             var e = db.Pasajero.Find(id.Value);
             if (e == null) return HttpNotFound();
-            // Solo se actualizan los campos editables.
-            if (TryUpdateModel(e, "", new[] { "TipoDocumentoCodigo", "NumeroDocumento", "Nombres", "Apellidos", "FechaNacimiento", "Correo", "Telefono" }))
+            // Solo se actualizan los campos editables. El counter solo cambia correo y teléfono (MOD-04).
+            var campos = SoloContacto
+                ? new[] { "Correo", "Telefono" }
+                : new[] { "TipoDocumentoCodigo", "NumeroDocumento", "Nombres", "Apellidos", "FechaNacimiento", "Correo", "Telefono" };
+            if (TryUpdateModel(e, "", campos))
             {
                 if (e.NumeroDocumento != null) e.NumeroDocumento = e.NumeroDocumento.Trim().ToUpper();
                 try
