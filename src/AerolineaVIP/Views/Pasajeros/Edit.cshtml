@@ -1,6 +1,12 @@
 ﻿@model AerolineaVIP.Models.Dominio.Pasajero
 @{
     ViewBag.Title = "Editar pasajero";
+
+    // El counter solo corrige correo y teléfono: los datos de identidad se muestran bloqueados.
+    var soloContacto = ViewBag.SoloContacto == true;
+    object identidad = soloContacto ? (object)new { @class = "form-control", @readonly = "readonly" } : new { @class = "form-control" };
+    object documento = soloContacto ? (object)new { @class = "form-control", style = "text-transform:uppercase", @readonly = "readonly" } : new { @class = "form-control", style = "text-transform:uppercase" };
+    object tipo = soloContacto ? (object)new { @class = "form-select", disabled = "disabled" } : new { @class = "form-select" };
 }
 <nav aria-label="Ruta de navegación">
     <ol class="breadcrumb">
@@ -11,7 +17,7 @@
 </nav>
 <h1 class="h3">Editar pasajero</h1>
 <p class="text-muted small">Los campos marcados con <span class="req">*</span> son obligatorios.</p>
-@if (ViewBag.SoloContacto == true)
+@if (soloContacto)
 {
     <div class="alert alert-info" role="status"><strong>Información:</strong> Como empleado de counter solo se guardan el correo y el teléfono. Los datos de identidad los corrige la administración.</div>
 }
@@ -22,27 +28,27 @@
     <div class="row g-3">
         <div class="col-md-6">
             @Html.LabelFor(model => model.TipoDocumentoCodigo, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
-            @Html.DropDownList("TipoDocumentoCodigo", null, "Seleccione…", htmlAttributes: new { @class = "form-select" })
+            @Html.DropDownList("TipoDocumentoCodigo", null, "Seleccione…", htmlAttributes: tipo)
             @Html.ValidationMessageFor(model => model.TipoDocumentoCodigo, "", new { @class = "text-danger small", role = "alert" })
         </div>
         <div class="col-md-6">
             @Html.LabelFor(model => model.NumeroDocumento, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
-            @Html.EditorFor(model => model.NumeroDocumento, new { htmlAttributes = new { @class = "form-control", style = "text-transform:uppercase" } })
+            @Html.EditorFor(model => model.NumeroDocumento, new { htmlAttributes = documento })
             @Html.ValidationMessageFor(model => model.NumeroDocumento, "", new { @class = "text-danger small", role = "alert" })
         </div>
         <div class="col-md-6">
             @Html.LabelFor(model => model.Nombres, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
-            @Html.EditorFor(model => model.Nombres, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.EditorFor(model => model.Nombres, new { htmlAttributes = identidad })
             @Html.ValidationMessageFor(model => model.Nombres, "", new { @class = "text-danger small", role = "alert" })
         </div>
         <div class="col-md-6">
             @Html.LabelFor(model => model.Apellidos, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
-            @Html.EditorFor(model => model.Apellidos, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.EditorFor(model => model.Apellidos, new { htmlAttributes = identidad })
             @Html.ValidationMessageFor(model => model.Apellidos, "", new { @class = "text-danger small", role = "alert" })
         </div>
         <div class="col-md-6">
             @Html.LabelFor(model => model.FechaNacimiento, htmlAttributes: new { @class = "form-label" })
-            @Html.EditorFor(model => model.FechaNacimiento, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.EditorFor(model => model.FechaNacimiento, new { htmlAttributes = identidad })
             @Html.ValidationMessageFor(model => model.FechaNacimiento, "", new { @class = "text-danger small", role = "alert" })
         </div>
         <div class="col-md-6">
