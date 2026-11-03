@@ -402,7 +402,27 @@ namespace AerolineaVIP.Controllers
             vm.Titular = titular == null ? "(usuario no registrado)" : titular.Etiqueta;
             vm.TitularCorreo = titular == null ? null : titular.Email;
             Reservas.EvaluarCancelacion(vm, EsAdministracion);
+            if (EsPersonal) Reservas.PrepararCambioAsiento(vm);
             return View(vm);
+        }
+
+        // Cambio de asiento desde el counter o la administración (MOD-09).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesApp.Personal)]
+        public ActionResult CambiarAsiento(int id, int asignacionId, byte? nuevoAsiento)
+        {
+            if (!nuevoAsiento.HasValue)
+            {
+                Error("Seleccione el nuevo asiento.");
+                return RedirectToAction("Gestionar", new { id });
+            }
+            var error = Reservas.CambiarAsiento(id, asignacionId, nuevoAsiento.Value);
+            if (error == null)
+                Exito("Asiento cambiado correctamente. El asiento anterior quedó disponible.");
+            else
+                Error(error);
+            return RedirectToAction("Gestionar", new { id });
         }
 
         [HttpPost]

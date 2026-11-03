@@ -4,10 +4,12 @@
     var r = Model.Reserva;
 }
 @* Pantalla 14. Gestión y cancelación. *@
-<nav aria-label="Ruta de navegación"><ol class="breadcrumb">
-    <li class="breadcrumb-item">@Html.ActionLink("Reservas", "MisReservas")</li>
-    <li class="breadcrumb-item active" aria-current="page">@r.CodigoReserva</li>
-</ol></nav>
+<nav aria-label="Ruta de navegación">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">@Html.ActionLink("Reservas", "MisReservas")</li>
+        <li class="breadcrumb-item active" aria-current="page">@r.CodigoReserva</li>
+    </ol>
+</nav>
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
     <h1 class="h3 mb-0 me-2">Reserva @r.CodigoReserva</h1>
     <span class="@Formato.ClaseEstado(r.EstadoReservaCodigo)">@Formato.TextoEstadoReserva(r.EstadoReservaCodigo)</span>
@@ -22,6 +24,45 @@
     @Html.Partial("_DetalleReserva", Model)
 </div>
 
+@if (Model.Lineas.Any(l => l.PuedeCambiarAsiento))
+{
+    <section class="tarjeta mb-3" aria-labelledby="tituloCambioAsiento">
+        <h2 id="tituloCambioAsiento" class="h5">Cambio de asiento</h2>
+        <p class="texto-ayuda">Solo asientos disponibles (verdes) del mismo vuelo. No aplica a pasajeros con check-in ni a vuelos próximos a salir.</p>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 tabla-apilada">
+                <thead><tr><th scope="col">Vuelo</th><th scope="col">Pasajero</th><th scope="col">Asiento actual</th><th scope="col">Nuevo asiento</th></tr></thead>
+                <tbody>
+                    @foreach (var l in Model.Lineas.Where(x => x.PuedeCambiarAsiento))
+                    {
+                        <tr>
+                            <td data-label="Vuelo">@l.CodigoVuelo<br /><span class="texto-ayuda">@l.Ruta</span></td>
+                            <td data-label="Pasajero">@l.Pasajero</td>
+                            <td data-label="Asiento actual" class="fw-bold">@l.Asiento</td>
+                            <td data-label="Nuevo asiento">
+                                @using (Html.BeginForm("CambiarAsiento", "Reservas", new { id = r.ReservaId }, FormMethod.Post, new { @class = "d-flex flex-wrap gap-2" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="asignacionId" value="@l.AsignacionId" />
+                                    <label class="visually-hidden" for="nuevo_@l.AsignacionId">Nuevo asiento para @l.Pasajero</label>
+                                    <select class="form-select form-select-sm w-auto" id="nuevo_@l.AsignacionId" name="nuevoAsiento" required>
+                                        <option value="">Elegir…</option>
+                                        @foreach (var a in l.AsientosLibres)
+                                        {
+                                            <option value="@a.NumeroAsiento">@a.Codigo · @a.Ubicacion</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" data-texto-carga="Cambiando…">Cambiar</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
 <div class="d-flex flex-wrap gap-2 mb-4">
     @if (r.EstadoReservaCodigo == "PENDIENTE")
     {
@@ -34,6 +75,10 @@
     @if (r.EstadoReservaCodigo == "CONFIRMADA")
     {
         <a class="btn btn-outline-primary" href="@Url.Action("Index", "CheckIn", new { codigo = r.CodigoReserva })">Check-in</a>
+    }
+    @if (User.IsInRole(RolesApp.Counter) || User.IsInRole(RolesApp.Administrador) || User.IsInRole(RolesApp.SuperUsuario))
+    {
+        <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Counter")">Volver al counter</a>
     }
     <a class="btn btn-outline-secondary" href="@Url.Action("MisReservas")">Regresar</a>
 </div>
@@ -51,7 +96,10 @@
         {
             @Html.AntiForgeryToken()
             <div class="mb-3">
-                <label for="motivo" class="form-label">Motivo de cancelación @if (Model.RequiereMotivo) { <span class="req">*</span> } else { <span class="text-muted fw-normal">(opcional)</span> }</label>
+                <label for="motivo" class="form-label">Motivo de cancelación @if (Model.RequiereMotivo)
+                {<span class="req">*</span> }
+                else
+                { <span class="text-muted fw-normal">(opcional)</span>}</label>
                 <textarea id="motivo" name="motivo" class="form-control" rows="3" maxlength="300" aria-describedby="ayudaMotivo"
                           data-val="@(Model.RequiereMotivo ? "true" : "false")" data-val-required="Indique el motivo de la cancelación."
                           data-val-length="El motivo debe tener entre 10 y 300 caracteres." data-val-length-min="10" data-val-length-max="300"></textarea>
@@ -73,7 +121,7 @@
                             </div>
                             @if (r.EstadoReservaCodigo == "CONFIRMADA")
                             {
-                                <p class="small mb-0">Se anulará la compra, se registrará el reverso SIMULADO del pago y se emitirá una nota de crédito académica. Las condiciones de reembolso están pendientes de aprobación.</p>
+                                <p class="small mb-0">Se anulará la compra, se registrará el reverso SIMULADO del pago y se emitirá una nota de crédito académica. El reembolso es simulado, sin penalización (DP-08).</p>
                             }
                         </div>
                         <div class="modal-footer">
@@ -90,10 +138,10 @@
 @section scripts {
     @Scripts.Render("~/bundles/jqueryval")
     <script>
-        $('#btnSolicitarCancelacion').on('click', function () {
-            if ($('#formCancelar').valid()) {
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCancelar')).show();
-            }
-        });
+                $('#btnSolicitarCancelacion').on('click', function () {
+                    if ($('#formCancelar').valid()) {
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCancelar')).show();
+                    }
+                });
     </script>
 }

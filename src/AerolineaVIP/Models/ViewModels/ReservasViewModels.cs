@@ -254,6 +254,12 @@ namespace AerolineaVIP.Models.ViewModels
         public decimal Importe { get; set; }
         public string EstadoAsignacion { get; set; }
         public string CheckIn { get; set; }
+
+        // Cambio de asiento (MOD-09)
+        public int VueloId { get; set; }
+        public byte NumeroAsiento { get; set; }
+        public bool PuedeCambiarAsiento { get; set; }
+        public List<AsientoVM> AsientosLibres { get; set; }
     }
 
     /// <summary>Pantallas 12 y 14: detalle completo de una reserva.</summary>
