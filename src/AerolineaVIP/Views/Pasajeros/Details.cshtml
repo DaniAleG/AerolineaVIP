@@ -27,6 +27,6 @@
     </dl>
 </div>
 <div class="mt-3 d-flex gap-2">
-    @if ((User.IsInRole(AerolineaVIP.RolesApp.SuperUsuario) || User.IsInRole(AerolineaVIP.RolesApp.Administrador))) { @Html.ActionLink("Editar", "Edit", new { id = Model.PasajeroId }, new { @class = "btn btn-primary" }) }
+    @Html.ActionLink("Editar", "Edit", new { id = Model.PasajeroId }, new { @class = "btn btn-primary" })
     @Html.ActionLink("Volver a la lista", "Index", null, new { @class = "btn btn-outline-secondary" })
 </div>

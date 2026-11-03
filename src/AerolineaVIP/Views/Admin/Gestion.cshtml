@@ -156,7 +156,6 @@ else if (Model.Tab == "pasajeros")
                                     <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Details", "Pasajeros", new { id = p.PasajeroId })">Detalles</a>
                                     @if (Model.PuedeVerUsuarios)
                                     {
-                                        <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Edit", "Pasajeros", new { id = p.PasajeroId })">Editar</a>
                                         <a class="btn btn-sm btn-outline-danger" href="@Url.Action("Delete", "Pasajeros", new { id = p.PasajeroId })">Eliminar</a>
                                     }
                                     <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Gestion", new { tab = "reservas", Buscar = p.NumeroDocumento })">Reservas</a>
