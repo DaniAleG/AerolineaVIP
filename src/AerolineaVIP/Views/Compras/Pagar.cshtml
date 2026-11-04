@@ -126,17 +126,26 @@
         <div class="tarjeta resumen pegajoso">
             <h2 class="tarjeta-titulo">Resumen de compra</h2>
             <dl>
-                <dt>Reserva</dt><dd>@r.CodigoReserva</dd>
-                <dt>Titular</dt><dd>@d.Titular</dd>
-                <dt>Ruta</dt><dd>@(primera != null ? primera.Ruta.Split('→')[0].Trim() + " → " + ultima.Ruta.Split('→')[1].Trim() : "—")</dd>
-                <dt>Fecha</dt><dd>@(primera != null ? Formato.Fecha(primera.Fecha) : "—")</dd>
-                <dt>Pasajeros</dt><dd>@d.Lineas.Select(l => l.Pasajero).Distinct().Count()</dd>
-                <dt>Asientos</dt><dd>@d.AsientosTexto</dd>
-                <dt>Total</dt><dd class="total">@Formato.Dinero(d.Lineas.Where(l => l.EstadoAsignacion == "PENDIENTE").Sum(l => l.Importe))</dd>
-                <dt>Estado de la compra</dt><dd><span class="estado estado-pendiente">@(d.Compra == null ? "Pendiente de pago" : Formato.TextoEstadoCompra(d.EstadoCompra))</span></dd>
+                <dt>Reserva</dt>
+                <dd>@r.CodigoReserva</dd>
+                <dt>Titular</dt>
+                <dd>@d.Titular</dd>
+                <dt>Ruta</dt>
+                <dd>@(primera != null ? primera.Ruta.Split('→')[0].Trim() + " → " + ultima.Ruta.Split('→')[1].Trim() : "—")</dd>
+                <dt>Fecha</dt>
+                <dd>@(primera != null ? Formato.Fecha(primera.Fecha) : "—")</dd>
+                <dt>Pasajeros</dt>
+                <dd>@d.Lineas.Select(l => l.Pasajero).Distinct().Count()</dd>
+                <dt>Asientos</dt>
+                <dd>@d.AsientosTexto</dd>
+                <dt>Total</dt>
+                <dd class="total">@Formato.Dinero(d.Lineas.Where(l => l.EstadoAsignacion == "PENDIENTE").Sum(l => l.Importe)) <small class="texto-ayuda d-block">IVA @Politicas.PorcentajeIVA % incluido</small></dd>
+                <dt>Estado de la compra</dt>
+                <dd><span class="estado estado-pendiente">@(d.Compra == null ? "Pendiente de pago" : Formato.TextoEstadoCompra(d.EstadoCompra))</span></dd>
                 @if (r.FechaExpiracion.HasValue)
                 {
-                    <dt>Reserva vigente hasta</dt><dd>@Formato.FechaHora(r.FechaExpiracion)</dd>
+                    <dt>Reserva vigente hasta</dt>
+                    <dd>@Formato.FechaHora(r.FechaExpiracion)</dd>
                 }
             </dl>
             <p class="texto-ayuda mt-2 mb-0">El importe se calcula en el servidor con las tarifas de ejemplo (DP-04).</p>

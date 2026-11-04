@@ -109,7 +109,8 @@ else
             </div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle tabla-apilada">
-                    <thead><tr><th scope="col">Pasajero</th><th scope="col">Vuelo</th><th scope="col">Ruta</th><th scope="col">Fecha</th><th scope="col">Asiento</th>@if (d.MostrarImportes) { <th scope="col" class="text-end">Importe</th> }</tr></thead>
+                    <thead><tr><th scope="col">Pasajero</th><th scope="col">Vuelo</th><th scope="col">Ruta</th><th scope="col">Fecha</th><th scope="col">Asiento</th>@if (d.MostrarImportes)
+                    {<th scope="col" class="text-end">Importe</th>}</tr></thead>
                     <tbody>
                         @foreach (var l in d.Lineas)
                         {
@@ -119,13 +120,20 @@ else
                                 <td data-label="Ruta">@l.Ruta</td>
                                 <td data-label="Fecha">@Formato.Fecha(l.Fecha) · @l.Horario</td>
                                 <td data-label="Asiento">@l.Asiento</td>
-                                @if (d.MostrarImportes) { <td data-label="Importe" class="text-end">@Formato.Dinero(l.Importe, e.MonedaCodigo)</td> }
+                                @if (d.MostrarImportes)
+                                {
+                                    <td data-label="Importe" class="text-end">@Formato.Dinero(l.Importe, e.MonedaCodigo)</td>
+}
                             </tr>
                         }
                     </tbody>
                     @if (d.MostrarImportes)
                     {
-                        <tfoot><tr><th colspan="5" class="text-end">Total</th><td class="text-end total">@Formato.Dinero(e.TotalOperacion, e.MonedaCodigo)</td></tr></tfoot>
+                        <tfoot>
+                            <tr><th colspan="5" class="text-end fw-normal">Subtotal</th><td class="text-end">@Formato.Dinero(d.Subtotal, e.MonedaCodigo)</td></tr>
+                            <tr><th colspan="5" class="text-end fw-normal">IVA @d.PorcentajeIva %</th><td class="text-end">@Formato.Dinero(d.Iva, e.MonedaCodigo)</td></tr>
+                            <tr><th colspan="5" class="text-end">Total</th><td class="text-end total">@Formato.Dinero(e.TotalOperacion, e.MonedaCodigo)</td></tr>
+                        </tfoot>
                     }
                 </table>
             </div>

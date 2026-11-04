@@ -31,6 +31,7 @@ namespace AerolineaVIP.Servicios
             return new ComprobanteDocumentoVM
             {
                 Encabezado = enc,
+                PorcentajeIva = Politicas.PorcentajeIVA,
                 Cliente = usuario == null ? "Usuario no registrado en Identity (" + enc.UsuarioId + ")" : usuario.Etiqueta,
                 ClienteCorreo = usuario == null ? null : usuario.Email,
                 Lineas = asignaciones
@@ -122,9 +123,13 @@ namespace AerolineaVIP.Servicios
             if (d.MostrarImportes)
             {
                 y += 6;
+                pdf.TextoDerecha(der - 4, y, "Subtotal: " + Formato.Dinero(d.Subtotal, e.MonedaCodigo), 9);
+                y += 13;
+                pdf.TextoDerecha(der - 4, y, "IVA " + d.PorcentajeIva + " %: " + Formato.Dinero(d.Iva, e.MonedaCodigo), 9);
+                y += 15;
                 pdf.TextoDerecha(der - 4, y, "Total: " + Formato.Dinero(e.TotalOperacion, e.MonedaCodigo), 11, true);
                 y += 14;
-                pdf.TextoDerecha(der - 4, y, "Tarifas de ejemplo (DP-04). Valores sin desglose tributario (DP-05).", 7.5);
+                pdf.TextoDerecha(der - 4, y, "Tarifas de ejemplo (DP-04) con IVA " + d.PorcentajeIva + " % incluido (DP-05).", 7.5);
             }
 
             // Leyenda obligatoria
