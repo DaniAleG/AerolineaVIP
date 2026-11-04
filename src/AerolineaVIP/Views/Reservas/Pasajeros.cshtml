@@ -90,14 +90,9 @@
 @section scripts {
     @Scripts.Render("~/bundles/jqueryval")
     <script>
-        // Al cambiar el tipo de documento se vuelve a validar el número (cédula = 10 dígitos).
-        $(document).on('change', 'select[id$="__TipoDocumentoCodigo"]', function () {
-            var $doc = $('input[data-tipo-documento="#' + this.id + '"]');
-            if ($doc.val()) { $doc.valid(); }
-        });
-        // Al enviar con errores se abren los bloques que los contienen.
-        $('#formPasajeros').on('invalid-form.validate', function () {
-            setTimeout(function () { $('.input-validation-error').closest('.accordion-collapse').addClass('show'); }, 0);
-        });
+                // Al enviar con errores se abren los bloques que los contienen.
+                $('#formPasajeros').on('invalid-form.validate', function () {
+                    setTimeout(function () { $('.input-validation-error').closest('.accordion-collapse').addClass('show'); }, 0);
+                });
     </script>
 }

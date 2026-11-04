@@ -22,7 +22,7 @@
             </div>
             <div class="col-md-6">
                 @Html.LabelFor(model => model.Identificacion, htmlAttributes: new { @class = "form-label" }) <span class="req" aria-hidden="true">*</span>
-                @Html.EditorFor(model => model.Identificacion, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.EditorFor(model => model.Identificacion, new { htmlAttributes = new { @class = "form-control", maxlength = 13, inputmode = "numeric" } })
                 @Html.ValidationMessageFor(model => model.Identificacion, "", new { @class = "text-danger small", role = "alert" })
             </div>
             <div class="col-md-6">

@@ -5,7 +5,7 @@
     // El counter solo corrige correo y teléfono: los datos de identidad se muestran bloqueados.
     var soloContacto = ViewBag.SoloContacto == true;
     object identidad = soloContacto ? (object)new { @class = "form-control", @readonly = "readonly" } : new { @class = "form-control" };
-    object documento = soloContacto ? (object)new { @class = "form-control", style = "text-transform:uppercase", @readonly = "readonly" } : new { @class = "form-control", style = "text-transform:uppercase" };
+    object documento = soloContacto ? (object)new { @class = "form-control", style = "text-transform:uppercase", @readonly = "readonly" } : new { @class = "form-control", style = "text-transform:uppercase", data_tipo_documento = "#TipoDocumentoCodigo" };
     object tipo = soloContacto ? (object)new { @class = "form-select", disabled = "disabled" } : new { @class = "form-select" };
 }
 <nav aria-label="Ruta de navegación">
