@@ -47,6 +47,9 @@ namespace AerolineaVIP.Servicios
         /// <summary>Regla de la simulación de pago: un número que termina así se rechaza.</summary>
         public static string SufijoTarjetaRechazada { get { return Texto("Politica:SufijoTarjetaRechazada", "0000"); } }
 
+        /// <summary>DP-05: porcentaje de IVA incluido en las tarifas (se desglosa en los comprobantes).</summary>
+        public static int PorcentajeIVA { get { return Entero("Politica:PorcentajeIVA", 15); } }
+
         /// <summary>DP-04: moneda de las compras.</summary>
         public static string Moneda { get { return Texto("Politica:Moneda", "USD"); } }
 

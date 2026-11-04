@@ -31,6 +31,7 @@ namespace AerolineaVIP.Servicios
             return new ComprobanteDocumentoVM
             {
                 Encabezado = enc,
+                PorcentajeIva = Politicas.PorcentajeIVA,
                 Cliente = usuario == null ? "Usuario no registrado en Identity (" + enc.UsuarioId + ")" : usuario.Etiqueta,
                 ClienteCorreo = usuario == null ? null : usuario.Email,
                 Lineas = asignaciones
@@ -60,11 +61,12 @@ namespace AerolineaVIP.Servicios
             var e = d.Encabezado;
             var pdf = new PdfSimple();
             const double izq = 40, der = 555;
-
-            // Encabezado
+            
+            //encabezado
             pdf.Rectangulo(0, 0, PdfSimple.Ancho, 70, 0.05, 0.12, 0.25);
-            pdf.TextoColor(izq, 32, "AEROLÍNEA VIP", 18, true, 1, 1, 1);
-            pdf.TextoColor(izq, 50, "Proyecto académico · Comprobante de una operación SIMULADA", 9, false, 0.85, 0.75, 0.45);
+            pdf.Logo(izq, 11, 48);
+            pdf.TextoColor(izq + 58, 32, "AEROLÍNEA VIP", 18, true, 1, 1, 1);
+            pdf.TextoColor(izq + 58, 50, "Proyecto académico · Comprobante de una operación SIMULADA", 9, false, 0.85, 0.75, 0.45);
             var tipo = e.TipoComprobanteCodigo == "FACTURA" ? "Comprobante de venta académico"
                      : e.TipoComprobanteCodigo == "NOTA_CREDITO" ? "Nota de crédito académica"
                      : e.TipoComprobanteCodigo == "CONFIRMACION" ? "Confirmación de la operación" : e.TipoComprobante;
@@ -121,9 +123,13 @@ namespace AerolineaVIP.Servicios
             if (d.MostrarImportes)
             {
                 y += 6;
+                pdf.TextoDerecha(der - 4, y, "Subtotal: " + Formato.Dinero(d.Subtotal, e.MonedaCodigo), 9);
+                y += 13;
+                pdf.TextoDerecha(der - 4, y, "IVA " + d.PorcentajeIva + " %: " + Formato.Dinero(d.Iva, e.MonedaCodigo), 9);
+                y += 15;
                 pdf.TextoDerecha(der - 4, y, "Total: " + Formato.Dinero(e.TotalOperacion, e.MonedaCodigo), 11, true);
                 y += 14;
-                pdf.TextoDerecha(der - 4, y, "Tarifas de ejemplo (DP-04). Valores sin desglose tributario (DP-05).", 7.5);
+                pdf.TextoDerecha(der - 4, y, "Tarifas de ejemplo (DP-04) con IVA " + d.PorcentajeIva + " % incluido (DP-05).", 7.5);
             }
 
             // Leyenda obligatoria

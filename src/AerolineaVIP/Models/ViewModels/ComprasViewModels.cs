@@ -142,7 +142,13 @@ namespace AerolineaVIP.Models.ViewModels
         public string ClienteCorreo { get; set; }
         public List<LineaComprobanteVM> Lineas { get; set; }
         public bool MostrarImportes { get { return Encabezado.TipoComprobanteCodigo != "CONFIRMACION"; } }
+
+        // Desglose del IVA (DP-05): las tarifas ya incluyen el IVA.
+        public int PorcentajeIva { get; set; }
+        public decimal Subtotal { get { return Math.Round(Encabezado.TotalOperacion / (1 + PorcentajeIva / 100m), 2); } }
+        public decimal Iva { get { return Encabezado.TotalOperacion - Subtotal; } }
     }
+}
 
     public class ComprobantesVM : IValidatableObject
     {
