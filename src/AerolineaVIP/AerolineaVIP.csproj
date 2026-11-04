@@ -195,6 +195,8 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Infraestructura\RucAttribute.cs" />
+    <Compile Include="Infraestructura\ValidacionEcuador.cs" />
     <Compile Include="Infraestructura\DecimalModelBinder.cs" />
     <Compile Include="Infraestructura\DebeSerVerdaderoAttribute.cs" />
     <Compile Include="Infraestructura\ErroresBD.cs" />
