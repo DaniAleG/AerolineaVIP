@@ -148,7 +148,6 @@ namespace AerolineaVIP.Models.ViewModels
         public decimal Subtotal { get { return Math.Round(Encabezado.TotalOperacion / (1 + PorcentajeIva / 100m), 2); } }
         public decimal Iva { get { return Encabezado.TotalOperacion - Subtotal; } }
     }
-}
 
     public class ComprobantesVM : IValidatableObject
     {
