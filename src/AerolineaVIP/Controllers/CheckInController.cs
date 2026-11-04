@@ -75,6 +75,47 @@ namespace AerolineaVIP.Controllers
             }
         }
 
+        /// <summary>Pase de abordar imprimible; solo si el check-in del pasajero está completado.</summary>
+        public ActionResult Pase(int? id)
+        {
+            if (!id.HasValue) return RedirectToAction("Index");
+            var a = db.ReservaPasajeroVuelo
+                .Include(x => x.Reserva)
+                .Include(x => x.Pasajero)
+                .Include(x => x.CheckIns)
+                .Include(x => x.Vuelo.Aeronave)
+                .FirstOrDefault(x => x.AsignacionId == id.Value);
+            if (a == null || !PuedeAcceder(a.Reserva)) return AccesoDenegado();
+
+            var check = a.CheckIns.Where(c => c.EstadoCheckInCodigo == "COMPLETADO").OrderByDescending(c => c.FechaRegistro).FirstOrDefault();
+            if (check == null || a.EstadoAsignacionCodigo != "CONFIRMADA")
+            {
+                Advertir("El pase de abordar está disponible solo después de completar el check-in.");
+                return RedirectToAction("Index", new { codigo = a.Reserva.CodigoReserva });
+            }
+
+            var v = db.vw_VueloDetalle.AsNoTracking().First(x => x.VueloId == a.VueloId);
+            string asiento;
+            var vm = new PaseAbordarVM
+            {
+                CodigoReserva = a.Reserva.CodigoReserva,
+                Pasajero = a.Pasajero.NombreCompleto,
+                Documento = ServicioReservas.Documento(a.Pasajero.TipoDocumentoCodigo, a.Pasajero.NumeroDocumento),
+                CodigoVuelo = v.CodigoVuelo,
+                Origen = v.Origen,
+                CiudadOrigen = v.CiudadOrigen,
+                Destino = v.Destino,
+                CiudadDestino = v.CiudadDestino,
+                Salida = v.SalidaProgramada,
+                Llegada = v.LlegadaProgramada,
+                Asiento = Reservas.CodigosAsiento(new[] { a.VueloId }).TryGetValue(a.VueloId + "|" + a.NumeroAsiento, out asiento) ? asiento : a.NumeroAsiento.ToString(),
+                Matricula = a.Vuelo.Aeronave == null ? "—" : a.Vuelo.Aeronave.Matricula,
+                FechaCheckIn = check.FechaRegistro,
+                CierreEmbarque = v.SalidaProgramada.AddMinutes(-20)
+            };
+            return View(vm);
+        }
+
         /// <summary>Localiza la reserva y calcula la elegibilidad de cada pasajero y tramo.</summary>
         private Reserva Buscar(CheckInVM vm)
         {

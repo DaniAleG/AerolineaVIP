@@ -1,0 +1,72 @@
+﻿@model PaseAbordarVM
+@{
+    ViewBag.Title = "Pase de abordar " + Model.CodigoVuelo;
+}
+@* MOD-07. Pase de abordar imprimible después del check-in. *@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 no-imprimir">
+    <h1 class="h3 mb-0">Pase de abordar</h1>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-primary" onclick="window.print()">Imprimir</button>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Index", new { codigo = Model.CodigoReserva })">Volver al check-in</a>
+    </div>
+</div>
+
+<article class="tarjeta comprobante pase" aria-label="Pase de abordar de @Model.Pasajero">
+    <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-3">
+        <div>
+            <strong>AEROLÍNEA VIP</strong>
+            <div class="texto-ayuda">Pase de abordar · documento académico</div>
+        </div>
+        <span class="estado estado-ok">Check-in completado</span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="texto-ayuda">Pasajero</div>
+            <div class="fs-5 fw-bold">@Model.Pasajero</div>
+            <div class="small">@Model.Documento</div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="texto-ayuda">Reserva</div>
+            <div class="fw-bold">@Model.CodigoReserva</div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="texto-ayuda">Vuelo</div>
+            <div class="fw-bold">@Model.CodigoVuelo</div>
+        </div>
+
+        <div class="col-5 col-md-4">
+            <div class="texto-ayuda">Desde</div>
+            <div class="fs-3 fw-bold">@Model.Origen</div>
+            <div class="small">@Model.CiudadOrigen</div>
+        </div>
+        <div class="col-2 col-md-4 d-flex align-items-center justify-content-center fs-3" aria-hidden="true">✈</div>
+        <div class="col-5 col-md-4 text-end">
+            <div class="texto-ayuda">Hacia</div>
+            <div class="fs-3 fw-bold">@Model.Destino</div>
+            <div class="small">@Model.CiudadDestino</div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="texto-ayuda">Salida</div>
+            <div class="fw-bold">@Formato.FechaHora(Model.Salida)</div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="texto-ayuda">Llegada</div>
+            <div class="fw-bold">@Formato.FechaHora(Model.Llegada)</div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="texto-ayuda">Asiento</div>
+            <div class="fs-3 fw-bold">@Model.Asiento</div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="texto-ayuda">Aeronave</div>
+            <div class="fw-bold">@Model.Matricula</div>
+        </div>
+    </div>
+
+    <div class="border-top mt-3 pt-2 small">
+        Presentarse en la puerta de embarque antes de las <strong>@Formato.Hora(Model.CierreEmbarque.TimeOfDay)</strong> con el documento indicado.
+        Check-in registrado el @Formato.FechaHora(Model.FechaCheckIn).
+    </div>
+</article>

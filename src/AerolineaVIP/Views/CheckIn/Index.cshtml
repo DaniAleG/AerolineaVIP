@@ -74,6 +74,10 @@
                                     {
                                         <span class="@Formato.ClaseEstado(f.EstadoCheckIn)">@(f.EstadoCheckIn == "COMPLETADO" ? "Completado" : "Anulado")</span>
                                         <span class="texto-ayuda d-block">@Formato.FechaHora(f.FechaCheckIn)</span>
+                                        if (f.EstadoCheckIn == "COMPLETADO")
+                                        {
+                                            <a class="btn btn-sm btn-outline-primary mt-1" href="@Url.Action("Pase", new { id = f.AsignacionId })">Pase de abordar</a>
+                                        }
                                     }
                                     else
                                     {
