@@ -1,6 +1,7 @@
 ﻿// Validaciones de las entidades con [MetadataType].
 using System;
 using System.ComponentModel.DataAnnotations;
+using AerolineaVIP.Infraestructura;
 
 namespace AerolineaVIP.Models.Dominio
 {
@@ -124,9 +125,9 @@ namespace AerolineaVIP.Models.Dominio
         [StringLength(150)]
         public string NombreComercial { get; set; }
 
-        [Display(Name = "Identificación")]
+        [Display(Name = "RUC")]
         [Required(ErrorMessage = Patrones.MsgRequerido)]
-        [StringLength(60)]
+        [Ruc]
         public string Identificacion { get; set; }
 
         [Display(Name = "Dirección")]
@@ -374,8 +375,8 @@ namespace AerolineaVIP.Models.Dominio
         public System.Collections.Generic.IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (TipoDocumentoCodigo == "CEDULA" && !string.IsNullOrEmpty(NumeroDocumento)
-                && !System.Text.RegularExpressions.Regex.IsMatch(NumeroDocumento, @"^\d{10}$"))
-                yield return new ValidationResult("La cédula debe tener 10 dígitos.", new[] { "NumeroDocumento" });
+                && !DocumentoEcuador.CedulaValida(NumeroDocumento))
+                yield return new ValidationResult("La cédula no es válida (10 dígitos, revise el número).", new[] { "NumeroDocumento" });
             if (FechaNacimiento.HasValue && (FechaNacimiento.Value <= new DateTime(1900, 1, 1) || FechaNacimiento.Value > DateTime.Today))
                 yield return new ValidationResult("La fecha de nacimiento debe ser posterior a 01/01/1900 y no futura.", new[] { "FechaNacimiento" });
         }

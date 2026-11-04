@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web.Mvc;
 using AerolineaVIP.Models.Dominio;
+using AerolineaVIP.Infraestructura;
 
 namespace AerolineaVIP.Models.ViewModels
 {
@@ -81,8 +82,8 @@ namespace AerolineaVIP.Models.ViewModels
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (TipoDocumentoCodigo == "CEDULA" && !string.IsNullOrEmpty(NumeroDocumento)
-                && !System.Text.RegularExpressions.Regex.IsMatch(NumeroDocumento, @"^\d{10}$"))
-                yield return new ValidationResult("La cédula debe tener 10 dígitos.", new[] { "NumeroDocumento" });
+                && !DocumentoEcuador.CedulaValida(NumeroDocumento))
+                yield return new ValidationResult("La cédula no es válida (10 dígitos, revise el número).", new[] { "NumeroDocumento" });
             if (FechaNacimiento.HasValue && (FechaNacimiento.Value <= new DateTime(1900, 1, 1) || FechaNacimiento.Value.Date > DateTime.Today))
                 yield return new ValidationResult("La fecha de nacimiento debe ser posterior a 01/01/1900 y no futura.", new[] { "FechaNacimiento" });
         }
