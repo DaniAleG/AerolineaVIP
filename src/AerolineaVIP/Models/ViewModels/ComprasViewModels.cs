@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using AerolineaVIP.Models.Dominio;
+using AerolineaVIP.Infraestructura;
 
 namespace AerolineaVIP.Models.ViewModels
 {
@@ -29,7 +30,7 @@ namespace AerolineaVIP.Models.ViewModels
         [Display(Name = "Nombre del titular")]
         [Required(ErrorMessage = "Ingrese el nombre del titular.")]
         [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre del titular debe tener entre {2} y {1} caracteres.")]
-        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' .-]+$", ErrorMessage = "Use solo letras y espacios.")]
+        [RegularExpression(Formatos.Nombre, ErrorMessage = Formatos.MsgNombre)]
         public string NombreTitular { get; set; }
 
         [Display(Name = "Vencimiento (MM/AA)")]

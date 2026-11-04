@@ -7,9 +7,9 @@ namespace AerolineaVIP.Models.Dominio
 {
     internal static class Patrones
     {
-        public const string SoloLetras = @"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' .-]+$";
+        public const string SoloLetras = Formatos.Nombre;
         public const string Iata = @"^[A-Z]{3}$";
-        public const string Telefono = @"^[0-9+ ]{7,20}$";
+        public const string Telefono = Formatos.Telefono;
         public const string Codigo = @"^[A-Z0-9_]+$";
         public const string MsgRequerido = "El campo {0} es obligatorio.";
     }
@@ -136,11 +136,11 @@ namespace AerolineaVIP.Models.Dominio
         public string Direccion { get; set; }
 
         [Display(Name = "Teléfono (opcional)")]
-        [RegularExpression(Patrones.Telefono, ErrorMessage = "Use solo dígitos, espacios y «+» (7 a 20).")]
+        [RegularExpression(Patrones.Telefono, ErrorMessage = Formatos.MsgTelefono)]
         public string Telefono { get; set; }
 
         [Display(Name = "Correo (opcional)")]
-        [EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]
+        [RegularExpression(Formatos.Correo, ErrorMessage = Formatos.MsgCorreo)]
         [StringLength(256)]
         public string Correo { get; set; }
 
@@ -396,13 +396,13 @@ namespace AerolineaVIP.Models.Dominio
         [Display(Name = "Nombres")]
         [Required(ErrorMessage = Patrones.MsgRequerido)]
         [StringLength(100)]
-        [RegularExpression(Patrones.SoloLetras, ErrorMessage = "Use solo letras y espacios.")]
+        [RegularExpression(Patrones.SoloLetras, ErrorMessage = Formatos.MsgNombre)]
         public string Nombres { get; set; }
 
         [Display(Name = "Apellidos")]
         [Required(ErrorMessage = Patrones.MsgRequerido)]
         [StringLength(100)]
-        [RegularExpression(Patrones.SoloLetras, ErrorMessage = "Use solo letras y espacios.")]
+        [RegularExpression(Patrones.SoloLetras, ErrorMessage = Formatos.MsgNombre)]
         public string Apellidos { get; set; }
 
         [Display(Name = "Fecha de nacimiento (opcional)")]
@@ -411,12 +411,12 @@ namespace AerolineaVIP.Models.Dominio
         public DateTime? FechaNacimiento { get; set; }
 
         [Display(Name = "Correo (opcional)")]
-        [EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]
+        [RegularExpression(Formatos.Correo, ErrorMessage = Formatos.MsgCorreo)]
         [StringLength(256)]
         public string Correo { get; set; }
 
         [Display(Name = "Teléfono (opcional)")]
-        [RegularExpression(Patrones.Telefono, ErrorMessage = "Use solo dígitos, espacios y «+» (7 a 20).")]
+        [RegularExpression(Patrones.Telefono, ErrorMessage = Formatos.MsgTelefono)]
         public string Telefono { get; set; }
 
         [Display(Name = "Fecha de registro")]

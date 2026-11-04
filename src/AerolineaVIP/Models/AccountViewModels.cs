@@ -28,13 +28,13 @@ namespace AerolineaVIP.Models
         [Required(ErrorMessage = "Ingrese sus nombres.")]
         [Display(Name = "Nombres")]
         [StringLength(100, MinimumLength = 2, ErrorMessage = "Los nombres deben tener entre {2} y {1} caracteres.")]
-        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+$", ErrorMessage = "Use solo letras y espacios.")]
+        [RegularExpression(Formatos.Nombre, ErrorMessage = Formatos.MsgNombre)]
         public string Nombres { get; set; }
 
         [Required(ErrorMessage = "Ingrese sus apellidos.")]
         [Display(Name = "Apellidos")]
         [StringLength(100, MinimumLength = 2, ErrorMessage = "Los apellidos deben tener entre {2} y {1} caracteres.")]
-        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+$", ErrorMessage = "Use solo letras y espacios.")]
+        [RegularExpression(Formatos.Nombre, ErrorMessage = Formatos.MsgNombre)]
         public string Apellidos { get; set; }
 
         [Required(ErrorMessage = "Ingrese un nombre de usuario.")]
@@ -44,7 +44,7 @@ namespace AerolineaVIP.Models
         public string UserName { get; set; }
 
         [Required(ErrorMessage = "Ingrese su correo electrónico.")]
-        [EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]
+        [RegularExpression(Formatos.Correo, ErrorMessage = Formatos.MsgCorreo)]
         [StringLength(256)]
         [Display(Name = "Correo electrónico")]
         public string Email { get; set; }
@@ -87,7 +87,7 @@ namespace AerolineaVIP.Models
     public class ResetPasswordViewModel
     {
         [Required(ErrorMessage = "Ingrese su correo electrónico.")]
-        [EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]
+        [RegularExpression(Formatos.Correo, ErrorMessage = Formatos.MsgCorreo)]
         [Display(Name = "Correo electrónico")]
         public string Email { get; set; }
 

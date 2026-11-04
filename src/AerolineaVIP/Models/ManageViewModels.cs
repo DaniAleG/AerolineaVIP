@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using AerolineaVIP.Infraestructura;
 
 namespace AerolineaVIP.Models
 {
@@ -12,22 +13,22 @@ namespace AerolineaVIP.Models
         [Required(ErrorMessage = "Ingrese sus nombres.")]
         [Display(Name = "Nombres")]
         [StringLength(100, MinimumLength = 2, ErrorMessage = "Los nombres deben tener entre {2} y {1} caracteres.")]
-        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+$", ErrorMessage = "Use solo letras y espacios.")]
+        [RegularExpression(Formatos.Nombre, ErrorMessage = Formatos.MsgNombre)]
         public string Nombres { get; set; }
 
         [Required(ErrorMessage = "Ingrese sus apellidos.")]
         [Display(Name = "Apellidos")]
         [StringLength(100, MinimumLength = 2, ErrorMessage = "Los apellidos deben tener entre {2} y {1} caracteres.")]
-        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+$", ErrorMessage = "Use solo letras y espacios.")]
+        [RegularExpression(Formatos.Nombre, ErrorMessage = Formatos.MsgNombre)]
         public string Apellidos { get; set; }
 
         [Required(ErrorMessage = "Ingrese su correo electrónico.")]
-        [EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]
+        [RegularExpression(Formatos.Correo, ErrorMessage = Formatos.MsgCorreo)]
         [Display(Name = "Correo electrónico")]
         public string Email { get; set; }
 
         [Display(Name = "Teléfono (opcional)")]
-        [RegularExpression(@"^[0-9+ ]{7,20}$", ErrorMessage = "Use solo dígitos, espacios y «+» (7 a 20).")]
+        [RegularExpression(Formatos.Telefono, ErrorMessage = Formatos.MsgTelefono)]
         public string PhoneNumber { get; set; }
 
         public IList<string> Roles { get; set; }

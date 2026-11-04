@@ -56,13 +56,13 @@ namespace AerolineaVIP.Models.ViewModels
         [Display(Name = "Nombres")]
         [Required(ErrorMessage = "Ingrese los nombres.")]
         [StringLength(100)]
-        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' .-]+$", ErrorMessage = "Use solo letras y espacios.")]
+        [RegularExpression(Formatos.Nombre, ErrorMessage = Formatos.MsgNombre)]
         public string Nombres { get; set; }
 
         [Display(Name = "Apellidos")]
         [Required(ErrorMessage = "Ingrese los apellidos.")]
         [StringLength(100)]
-        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' .-]+$", ErrorMessage = "Use solo letras y espacios.")]
+        [RegularExpression(Formatos.Nombre, ErrorMessage = Formatos.MsgNombre)]
         public string Apellidos { get; set; }
 
         [Display(Name = "Fecha de nacimiento (opcional)")]
@@ -71,12 +71,12 @@ namespace AerolineaVIP.Models.ViewModels
         public DateTime? FechaNacimiento { get; set; }
 
         [Display(Name = "Correo (opcional)")]
-        [EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]
+        [RegularExpression(Formatos.Correo, ErrorMessage = Formatos.MsgCorreo)]
         [StringLength(256)]
         public string Correo { get; set; }
 
         [Display(Name = "Teléfono (opcional)")]
-        [RegularExpression(@"^[0-9+ ]{7,20}$", ErrorMessage = "Use solo dígitos, espacios y «+» (7 a 20).")]
+        [RegularExpression(Formatos.Telefono, ErrorMessage = Formatos.MsgTelefono)]
         public string Telefono { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
