@@ -74,9 +74,12 @@ else
     var e = d.Encabezado;
     <section id="vistaPrevia" class="comprobante" aria-labelledby="tituloVista">
         <div class="cabecera">
-            <div>
-                <div class="fw-bold" style="letter-spacing:.14em">AEROLÍNEA VIP</div>
-                <small>Proyecto académico · operación simulada</small>
+            <div class="d-flex align-items-center gap-2">
+                <img src="~/Content/img/logo.svg" alt="" width="40" height="40" />
+                <div>
+                    <div class="fw-bold" style="letter-spacing:.14em">AEROLÍNEA VIP</div>
+                    <small>Proyecto académico · operación simulada</small>
+                </div>
             </div>
             <div class="text-end">
                 <h2 id="tituloVista" class="h6 text-white mb-0">@e.TipoComprobante</h2>

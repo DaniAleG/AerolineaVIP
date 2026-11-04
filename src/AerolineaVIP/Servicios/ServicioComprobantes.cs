@@ -60,11 +60,12 @@ namespace AerolineaVIP.Servicios
             var e = d.Encabezado;
             var pdf = new PdfSimple();
             const double izq = 40, der = 555;
-
-            // Encabezado
+            
+            //encabezado
             pdf.Rectangulo(0, 0, PdfSimple.Ancho, 70, 0.05, 0.12, 0.25);
-            pdf.TextoColor(izq, 32, "AEROLÍNEA VIP", 18, true, 1, 1, 1);
-            pdf.TextoColor(izq, 50, "Proyecto académico · Comprobante de una operación SIMULADA", 9, false, 0.85, 0.75, 0.45);
+            pdf.Logo(izq, 11, 48);
+            pdf.TextoColor(izq + 58, 32, "AEROLÍNEA VIP", 18, true, 1, 1, 1);
+            pdf.TextoColor(izq + 58, 50, "Proyecto académico · Comprobante de una operación SIMULADA", 9, false, 0.85, 0.75, 0.45);
             var tipo = e.TipoComprobanteCodigo == "FACTURA" ? "Comprobante de venta académico"
                      : e.TipoComprobanteCodigo == "NOTA_CREDITO" ? "Nota de crédito académica"
                      : e.TipoComprobanteCodigo == "CONFIRMACION" ? "Confirmación de la operación" : e.TipoComprobante;
